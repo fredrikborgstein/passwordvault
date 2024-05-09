@@ -3,6 +3,8 @@ from Modules.add_record import add_record
 from Modules.authentication import authenticate
 from Modules.create_user import create_user
 from Modules.list_all import list_all_records
+from Modules.retrieve_record import retrieve_record
+from Modules.modify_record import modify_record
 
 
 def main():
@@ -19,6 +21,9 @@ def main():
     print("Please add a password to keep stored")
     add_record(username, master_password)
     list_all_records(username, master_password)
+    retrieve_record(username, master_password)
+    modify_record(username, master_password)
+
 
 
 main()

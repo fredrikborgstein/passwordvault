@@ -2,6 +2,7 @@ import base64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import bcrypt
+import cryptography.fernet as Fernet
 
 def create_fernet_key(password):
     salt = bcrypt.gensalt()
@@ -27,3 +28,13 @@ def derive_fernet_key(password, salt):
     
     key = base64.urlsafe_b64encode(kdf.derive(password))
     return key
+
+def derive_salt(db_salt):
+    salt = bytes(db_salt, encoding="utf-8")
+    return salt
+
+def decrypt_password(encrypted_password, key):
+    f = Fernet(key)
+    decrypted_password = f.decrypt(encrypted_password).decode("utf-8")
+    return decrypted_password
+

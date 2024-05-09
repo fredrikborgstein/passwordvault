@@ -2,7 +2,7 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
-from fernet_key_generation import derive_fernet_key
+from utilities import derive_fernet_key
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))

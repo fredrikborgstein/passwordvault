@@ -2,7 +2,7 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
-from fernet_key_generation import create_fernet_key
+from utilities import create_fernet_key
 
 
 
@@ -38,5 +38,5 @@ def add_record(username, master_password):
         print("A record for that application already exists.")
         return
     
-add_record("fredrik", "test")
+
 
