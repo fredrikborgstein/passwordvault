@@ -1,0 +1,22 @@
+1. A master password to log on and gain access
+1A. The ability to create the master account
+1B. The ability to create a new master account
+2. The ability to store passwords with required information in a MySQL database
+2B. The required information is username, password, and the URL for the webpage if applicable
+3. The ability to retrieve the password information
+3A. Should be searchable by username, page
+4. The ability to alter the information, and the ability to delete the information
+5. Once the information is retrieved, a button to add the password to the clipboard
+
+
+Enter username
+Enter password
+Hashes password
+
+
+NIST Guidelines for password storage:
+- salted with 32 bits of database
+- hashed with a one-way key derivation function such as Password-Based Key Derivation Function 2 (PBKDF2) or Balloon
+- Function should be iterated as much as possible (min 10,000 times) without harming server performance
+
+
