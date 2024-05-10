@@ -30,10 +30,8 @@ def list_all_records(username, master_password):
            print(f"Username: {application_username}")
            print(f"Password: {decrypted_password}")
            
-        
     except Exception as error:
         print("Error", "An error has occured: ", error)
     finally:
         cursor.close()
         conn.close()
-list_all_records("fredrik", "test")
