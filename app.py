@@ -40,6 +40,11 @@ current_frame = "loginframe"
 master_password = ""
 account_username = ""
 
+#TODO:
+# Add about window/page
+# Add help window/page
+# Add text at bottow of main window with version number
+
 # Functions
 
 def back_to_main_menu():
@@ -494,8 +499,6 @@ button22 = customtkinter.CTkButton(master=generatepasswordframe, text="Copy Pass
 
 generated_password = customtkinter.CTkLabel(master=generatepasswordframe, text="", font=("Century Gothic", 12))
 generated_password.place(x=50, y=200)
-
-
 
 # Running the application loop
 app.mainloop()
