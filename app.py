@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 # Importing internal modules
 from Modules.add_record import add_record
-# from Modules.retrieve_record import retrieve_record
+from Modules.retrieve_record import retrieve_record
 from Modules.authentication import authenticate
 from Modules.create_user import create_user
 # from Modules.list_all import list_all_records
@@ -223,8 +223,6 @@ def create_record():
         cursor.close()
         conn.close()
 
-
-
 addrecordframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
 
 l5 = customtkinter.CTkLabel(master=addrecordframe, text="Add Record", font=("Century Gothic", 20))
@@ -245,10 +243,62 @@ button11.place(x=160, y=240)
 
 # Creating the retrieve record window with widgets
 
+def search_record():
+    application = entry8.get()
+
+    try:
+        load_dotenv()
+        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
+        cursor = conn.cursor()
+        is_record_retrieved, app_username, app, app_dec_password = retrieve_record(account_username, master_password, application)
+        if not is_record_retrieved:
+            tk.messagebox.showerror("Error", "No record found for that application.")
+        else:
+            entry8.delete(0, tk.END)
+            entry8.focus()
+            label_app.configure(text="Application: ")
+            label_username.configure(text="Username: ")
+            label_password.configure(text="Password: ")
+            label_app_result.configure(text=app)
+            label_username_result.configure(text=app_username)
+            label_password_result.configure(text=app_dec_password)
+            button14.place(x=50, y=260)
+
+    except Exception as error:
+        tk.messagebox.showerror("Error", f"An error has occured: {error}")
+    finally:
+        cursor.close()
+        conn.close()
+
 retrieverecordframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
 
 l6 = customtkinter.CTkLabel(master=retrieverecordframe, text="Retrieve Record", font=("Century Gothic", 20))
 l6.place(x=110, y=45)
+
+entry8 = customtkinter.CTkEntry(master=retrieverecordframe, width=220, placeholder_text="Application", font=("Century Gothic", 12))
+entry8.place(x=50, y=100)
+
+button12 = customtkinter.CTkButton(master=retrieverecordframe, text="Search", width=100, font=("Century Gothic", 12), corner_radius=6, command=search_record)
+button12.place(x=50, y=145)
+
+button13 = customtkinter.CTkButton(master=retrieverecordframe, text="Back to Main Menu", width=100, font=("Century Gothic", 12), corner_radius=6, command=back_to_main_menu)
+button13.place(x=160, y=145)
+
+label_app = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_app.place(x=20, y=190)
+label_app_result = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_app_result.place(x=20, y=210)
+label_username = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_username.place(x=130, y=190)
+label_username_result = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_username_result.place(x=130, y=210)
+label_password = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_password.place(x=230, y=190)
+label_password_result = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_password_result.place(x=230, y=210)
+
+button14 = customtkinter.CTkButton(master=retrieverecordframe, text="Copy Password", width=100, font=("Century Gothic", 12), corner_radius=6)
+
 
 # Creating the modify record window with widgets
 
