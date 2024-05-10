@@ -7,12 +7,13 @@ import os
 from dotenv import load_dotenv
 
 # Importing internal modules
-# from Modules.add_record import add_record
+from Modules.add_record import add_record
 # from Modules.retrieve_record import retrieve_record
 from Modules.authentication import authenticate
 from Modules.create_user import create_user
 # from Modules.list_all import list_all_records
 # from Modules.modify_record import modify_record
+from Modules.utilities import create_fernet_key
 
 
 
@@ -34,6 +35,8 @@ l1 = customtkinter.CTkLabel(master=app, image=img1)
 l1.pack()
 
 current_frame = "loginframe"
+master_password = ""
+account_username = ""
 
 def back_to_main_menu():
     if current_frame == "addrecordframe":
@@ -69,6 +72,13 @@ def login():
     loginframe.place_forget()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
+    global master_password, account_username
+    master_password = password
+    account_username = username
+    entry1.delete(0, tk.END)
+    entry2.delete(0, tk.END)
+    entry1.focus()
+    
 def change_to_register():
     loginframe.place_forget()
     registerframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
@@ -119,6 +129,10 @@ def register():
     registerframe.place_forget()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
+    global master_password, account_username
+    master_password = password
+    account_username = username
+
 registerframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
 
 l3 = customtkinter.CTkLabel(master=registerframe, text="Create an account", font=("Century Gothic", 20))
@@ -143,7 +157,6 @@ def go_to_add_record():
     mainmenuframe.place_forget()
     addrecordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
     
-
 def go_to_retrieve_record():
     global current_frame
     current_frame = "retrieverecordframe"
@@ -186,6 +199,31 @@ button9.place(x=50, y=280)
 
 # Creating the add record window with widgets
 
+def create_record():
+    username = entry5.get()
+    application = entry6.get()
+    password = entry7.get()
+
+    try:
+        load_dotenv()
+        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
+        cursor = conn.cursor()
+        is_record_created = add_record(master_password, account_username, username, password, application)
+        if not is_record_created:
+            tk.messagebox.showerror("Error", "A record for that application already exists.")
+        else:
+            tk.messagebox.showinfo("Success", "The record has been created successfully.")
+            entry5.delete(0, tk.END)
+            entry6.delete(0, tk.END)
+            entry7.delete(0, tk.END)
+            entry5.focus()
+    except Exception as error:
+        tk.messagebox.showerror("Error", f"An error has occured: {error}")
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 addrecordframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
 
@@ -199,7 +237,7 @@ entry6.place(x=50, y=145)
 entry7 = customtkinter.CTkEntry(master=addrecordframe, width=220, placeholder_text="Password", font=("Century Gothic", 12))
 entry7.place(x=50, y=190)
 
-button10 = customtkinter.CTkButton(master=addrecordframe, text="Add Record", width=100, font=("Century Gothic", 12), corner_radius=6)
+button10 = customtkinter.CTkButton(master=addrecordframe, text="Add Record", width=100, font=("Century Gothic", 12), corner_radius=6, command=create_record)
 button10.place(x=50, y=240)
 button11 = customtkinter.CTkButton(master=addrecordframe, text="Back to Main Menu", width=100, font=("Century Gothic", 12), corner_radius=6, command=back_to_main_menu)
 button11.place(x=160, y=240)

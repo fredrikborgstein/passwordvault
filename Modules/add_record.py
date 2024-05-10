@@ -2,41 +2,28 @@ import mysql.connector
 import os
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
-from utilities import create_fernet_key
-
-
+from Modules.utilities import create_fernet_key
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
-def add_record(username, master_password):
-
-    application = input("Enter the application: ")
-
-    cursor.execute('SELECT application FROM {} WHERE application = "{}";'.format(username, application))
+def add_record(master_password, username, app_username, app_password, app):
+    cursor.execute(f'USE {os.getenv("DATABASE")} ')
+    cursor.execute('SELECT application FROM {} WHERE application = "{}";'.format(username, app))
     record = cursor.fetchall()
     if not record:
-        app_username = input("Enter your username for the application: ")
-        password = input("Enter the password: ")
         key, salt = create_fernet_key(bytes(master_password, encoding="utf-8"))
         f = Fernet(key)
-        token = f.encrypt(password.encode("utf-8"))
-        print(key)
-        print(salt)
-        try:
-            cursor.execute(f'USE {os.getenv("DATABASE")} ')
-            query = 'INSERT INTO {} (username, application, password, salt) VALUES (%s, %s, %s, %s);'.format(username)
-            cursor.execute(query, (app_username, application, token, salt))
-            conn.commit()
-        except Exception as error:
-            print("Error", "An error has occured: ", error)
-        finally:
-            cursor.close()
-            conn.close()
+        token = f.encrypt(app_password.encode("utf-8"))
+
+        cursor.execute(f'USE {os.getenv("DATABASE")} ')
+        query = 'INSERT INTO {} (username, application, password, salt) VALUES (%s, %s, %s, %s);'.format(username)
+        cursor.execute(query, (app_username, app, token, salt))
+        conn.commit()
+        return True
     else:
-        print("A record for that application already exists.")
-        return
+        return False
     
 
 
