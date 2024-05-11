@@ -1,25 +1,38 @@
-import mysql.connector
+"""This module lists all records for the user
+"""
 import os
+import mysql.connector
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
-from utilities import derive_fernet_key
+from Modules.utilities import derive_fernet_key
 
 load_dotenv()
-conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
+conn = mysql.connector.connect(user=os.getenv("USER"),
+                               password=os.getenv("PASSWORD"),
+                               host=os.getenv("HOST"),
+                               database=os.getenv("DATABASE"),
+                               charset=os.getenv("CHARSET"),
+                               collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
 def list_all_records(username, master_password):
+    """Lists all records for the user
+
+    Args:
+        username (string): The username of the user
+        master_password (string): The master password of the user
+    """
     try:
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
         cursor.execute(f'SELECT * FROM {username};')
         record = cursor.fetchall()
 
-        for list in record:
+        for l in record:
             
-           application_name = list[2]
-           application_username = list[1]
-           application_encrypted_password = list[3]
-           application_salt = list[4]
+           application_name = l[2]
+           application_username = l[1]
+           application_encrypted_password = l[3]
+           application_salt = l[4]
 
            salt = bytes(application_salt, encoding="utf-8")
            key = derive_fernet_key(bytes(master_password, encoding="utf-8"), salt)

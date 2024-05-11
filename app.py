@@ -1,10 +1,13 @@
+"""This module is the main module of the application. It contains the main window and all the functions that are used to interact with the database and the user interface.
+"""
+
 # Importing external modules
-import customtkinter
 import tkinter as tk
 from tkinter import ttk
+import os
+import customtkinter
 from PIL import Image, ImageTk
 import mysql.connector
-import os
 from dotenv import load_dotenv
 import pyperclip
 from cryptography.fernet import Fernet
@@ -16,7 +19,7 @@ from Modules.authentication import authenticate
 from Modules.create_user import create_user
 from Modules.utilities import derive_fernet_key
 from Modules.modify_record import modify_record
-from Modules.utilities import create_fernet_key
+
 
 # Creating the main window with settings and appearence
 
@@ -35,7 +38,9 @@ img1 = ImageTk.PhotoImage(img1.resize((600, 440)))
 l1 = customtkinter.CTkLabel(master=app, image=img1)
 l1.pack()
 
-versionlabel = customtkinter.CTkLabel(master=app, text=" Version 1.0 ", font=("Century Gothic", 10))
+versionlabel = customtkinter.CTkLabel(master=app, 
+                                      text=" Version 1.0 ", 
+                                      font=("Century Gothic", 10))
 versionlabel.place(x=280, y=420)
 
 menubar = tk.Menu(app)
@@ -43,9 +48,14 @@ file_menu = tk.Menu(menubar, tearoff=0)
 menubar.add_cascade(label="File", menu=file_menu)
 app.config(menu=menubar)
 
-file_menu.add_command(label="About", command=lambda: tk.messagebox.showinfo("About", "VikingCrypt Protector is a password manager application that allows you to store and retrieve your passwords securely." + versionlabel))
-file_menu.add_command(label="Help", command=lambda: tk.messagebox.showinfo("Help", "If you need help, please contact the developer at:)"))
-file_menu.add_command(label="Exit", command=app.quit)
+file_menu.add_command(label="About", 
+                      command=lambda: 
+                      tk.messagebox.showinfo("About", "VikingCrypt Protector is a password manager application that allows you to store and retrieve your passwords securely." + versionlabel))
+file_menu.add_command(label="Help", 
+                      command=lambda: 
+                      tk.messagebox.showinfo("Help", "If you need help, please contact the developer at:)"))
+file_menu.add_command(label="Exit", 
+                      command=app.quit)
 
 
 # Global variables
@@ -54,12 +64,12 @@ master_password = ""
 account_username = ""
 versionlabel = "  Version 1.0  "
 
-#TODO:
-# Add delete record button to the modify record window
-
 # Functions
 
 def back_to_main_menu():
+    """This function hides the current frame and shows the main menu frame
+    """
+
     global current_frame
     if current_frame == "addrecordframe":
         addrecordframe.place_forget()
@@ -75,14 +85,25 @@ def back_to_main_menu():
     current_frame = "mainmenuframe"
 
 def login(event):
+    """ This function authenticates the user and logs them in
+
+    Args:
+        event (string): Used to bind the function to the enter key
+    """
     username = entry1.get()
     password = entry2.get()
     is_user_authenticated = False
 
+    load_dotenv()
+    conn = mysql.connector.connect(user=os.getenv("USER"), 
+                                   password=os.getenv("PASSWORD"), 
+                                   host=os.getenv("HOST"), 
+                                   database=os.getenv("DATABASE"), 
+                                   charset=os.getenv("CHARSET"), 
+                                   collation=os.getenv("COLLATION"))
+    cursor = conn.cursor()
+
     try:
-        load_dotenv()
-        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
-        cursor = conn.cursor()
         is_user_authenticated = authenticate(username, password)
         if not is_user_authenticated:
             tk.messagebox.showerror("Error", "The username or password is incorrect.")
@@ -104,16 +125,24 @@ def login(event):
     entry1.focus()
 
 def unbind_button_to_login():
+    """ This function unbinds the enter key from the login function
+    """
     app.unbind("<Return>")
 
 def bind_button_to_login():
+    """ This function binds the enter key to the login function
+    """
     app.bind("<Return>", login)
 
 def change_to_register():
+    """ This function hides the login frame and shows the register frame
+    """
     loginframe.place_forget()
     registerframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def generate_password():
+    """ This function generates a random password and displays it in the entry field
+    """
     if current_frame == "generatepasswordframe":
         length = entry12.get()
     else:
@@ -130,18 +159,28 @@ def generate_password():
         entry7.insert(0, password)
 
 def back_to_login():
+    """ This function hides the register frame and shows the login frame
+    """
     registerframe.place_forget()
     loginframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def register():
+    """ This function creates a new user account in the database
+    """
     username = entry3.get()
     password = entry4.get()
     is_user_created = False
 
+    load_dotenv()
+    conn = mysql.connector.connect(user=os.getenv("USER"), 
+                                   password=os.getenv("PASSWORD"), 
+                                   host=os.getenv("HOST"), 
+                                   database=os.getenv("DATABASE"), 
+                                   charset=os.getenv("CHARSET"), 
+                                   collation=os.getenv("COLLATION"))
+    cursor = conn.cursor()
+
     try:
-        load_dotenv()
-        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
-        cursor = conn.cursor()
         is_user_created = create_user(username, password)
         if not is_user_created:
             tk.messagebox.showerror("Error", "The username is already taken.")  
@@ -160,18 +199,24 @@ def register():
     account_username = username
 
 def go_to_add_record():
+    """ This function hides the main menu frame and shows the add record frame
+    """
     global current_frame
     current_frame = "addrecordframe"
     mainmenuframe.place_forget()
     addrecordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
     
 def go_to_retrieve_record():
+    """ This function hides the main menu frame and shows the retrieve record frame
+    """
     global current_frame
     current_frame = "retrieverecordframe"
     mainmenuframe.place_forget()
     retrieverecordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def go_to_modify_record():
+    """ This function hides the retrieve record frame and shows the modify record frame
+    """
     global current_frame
     current_frame = "modifyrecordframe"
     mainmenuframe.place_forget()
@@ -179,6 +224,8 @@ def go_to_modify_record():
     modifyrecordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def go_to_list_all_records():
+    """ This function hides the main menu frame and shows the list all records frame
+    """
     global current_frame
     current_frame = "listallrecordsframe"
     mainmenuframe.place_forget()
@@ -186,6 +233,8 @@ def go_to_list_all_records():
     on_open_listall()
 
 def logout():
+    """ This function logs the user out and shows the login frame
+    """
     global current_frame
     current_frame = "loginframe"
     mainmenuframe.place_forget()
@@ -193,21 +242,35 @@ def logout():
     loginframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def go_to_generate_password():
+    """ This function hides the main menu frame and shows the generate password frame
+    """
     global current_frame
     current_frame = "generatepasswordframe"
     mainmenuframe.place_forget()
     generatepasswordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def create_record():
+    """ This function creates a new record in the database
+    """
     username = entry5.get()
     application = entry6.get()
     password = entry7.get()
 
+    load_dotenv()
+    conn = mysql.connector.connect(user=os.getenv("USER"),
+                                   password=os.getenv("PASSWORD"),
+                                   host=os.getenv("HOST"),
+                                   database=os.getenv("DATABASE"),
+                                   charset=os.getenv("CHARSET"),
+                                   collation=os.getenv("COLLATION"))
+    cursor = conn.cursor()
+
     try:
-        load_dotenv()
-        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
-        cursor = conn.cursor()
-        is_record_created = add_record(master_password, account_username, username, password, application)
+        is_record_created = add_record(master_password,
+                                       account_username,
+                                       username,
+                                       password,
+                                       application)
         if not is_record_created:
             tk.messagebox.showerror("Error", "A record for that application already exists.")
         else:
@@ -223,13 +286,23 @@ def create_record():
         conn.close()
 
 def search_record():
+    """ This function retrieves a record from the database
+    """
     application = entry8.get()
 
+    load_dotenv()
+    conn = mysql.connector.connect(user=os.getenv("USER"),
+                                   password=os.getenv("PASSWORD"),
+                                   host=os.getenv("HOST"),
+                                   database=os.getenv("DATABASE"),
+                                   charset=os.getenv("CHARSET"),
+                                   collation=os.getenv("COLLATION"))
+    cursor = conn.cursor()
+
     try:
-        load_dotenv()
-        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
-        cursor = conn.cursor()
-        is_record_retrieved, app_username, app, app_dec_password = retrieve_record(account_username, master_password, application)
+        is_record_retrieved, app_username, app, app_dec_password = retrieve_record(account_username,
+                                                                                   master_password,
+                                                                                   application)
         if not is_record_retrieved:
             tk.messagebox.showerror("Error", "No record found for that application.")
         else:
@@ -252,6 +325,8 @@ def search_record():
         conn.close()
 
 def copy_password():
+    """ This function copies the password to the clipboard
+    """
     if current_frame == "retrieverecordframe":
         pyperclip.copy(label_password_result.cget("text"))
     elif current_frame == "generatepasswordframe":
@@ -260,16 +335,29 @@ def copy_password():
     button14.place_forget()
 
 def modify_searched_record():
+    """ This function modifies a record in the database
+    """
     application = entry8.get()
     new_app_name = entry9.get()
     new_app_username = entry10.get()
     new_app_password = entry11.get()
 
+    load_dotenv()
+    conn = mysql.connector.connect(user=os.getenv("USER"),
+                                   password=os.getenv("PASSWORD"),
+                                   host=os.getenv("HOST"),
+                                   database=os.getenv("DATABASE"),
+                                   charset=os.getenv("CHARSET"),
+                                   collation=os.getenv("COLLATION"))
+    cursor = conn.cursor()
+
     try:
-        load_dotenv()
-        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
-        cursor = conn.cursor()
-        is_record_modified, app_username, app, app_dec_password = modify_record(account_username, master_password, application, new_app_name, new_app_username, new_app_password)
+        is_record_modified, app_username, appl, app_dec_password = modify_record(account_username,
+                                                                                 master_password,
+                                                                                 application,
+                                                                                 new_app_name,
+                                                                                 new_app_username,
+                                                                                 new_app_password)
         if not is_record_modified:
             tk.messagebox.showerror("Error", "No changes made to the record")
         else:
@@ -279,7 +367,7 @@ def modify_searched_record():
             entry11.delete(0, tk.END)
 
             label_app_mod.configure(text="Application: ")
-            label_app_result_mod.configure(text=app)
+            label_app_result_mod.configure(text=appl)
             label_username_mod.configure(text="Username: ")
             label_username_result_mod.configure(text=app_username)
             label_password_mod.configure(text="Password: ")
@@ -294,14 +382,28 @@ def modify_searched_record():
         back_to_main_menu()
 
 def on_open_listall():
+    """ This function lists all records in the database
+    """
 
     style = ttk.Style()
-    style.configure("Treeview", background="black", fieldbackground="black", foreground="white", font=("Century Gothic", 12), rowheight=25)
-    style.configure("Treeview.Heading", font=("Century Gothic", 12), background="black")
-    style.configure("Treeview.Item", font=("Century Gothic", 12), background="black")
+    style.configure("Treeview",
+                    background="black",
+                    fieldbackground="black",
+                    foreground="white",
+                    font=("Century Gothic", 12),
+                    rowheight=25)
+    style.configure("Treeview.Heading",
+                    font=("Century Gothic", 12),
+                    background="black")
+    style.configure("Treeview.Item",
+                    font=("Century Gothic", 12),
+                    background="black")
 
-
-    tree=ttk.Treeview(master=listallrecordsframe, columns=("Application", "Username", "Password"), show="headings", height=10)
+    
+    tree=ttk.Treeview(master=listallrecordsframe,
+                      columns=("Application", "Username", "Password"),
+                      show="headings",
+                      height=10)
     tree.heading("Application", text="Application")
     tree.heading("Username", text="Username")
     tree.heading("Password", text="Password")
@@ -314,17 +416,16 @@ def on_open_listall():
         load_dotenv()
         conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
         cursor = conn.cursor()
-
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
         cursor.execute(f'SELECT * FROM {account_username};')
         record = cursor.fetchall()
 
-        for list in record:
+        for l in record:
                 
-            application_name = list[2]
-            application_username = list[1]
-            application_encrypted_password = list[3]
-            application_salt = list[4]
+            application_name = l[2]
+            application_username = l[1]
+            application_encrypted_password = l[3]
+            application_salt = l[4]
 
             salt = bytes(application_salt, encoding="utf-8")
             key = derive_fernet_key(bytes(master_password, encoding="utf-8"), salt)
@@ -340,6 +441,8 @@ def on_open_listall():
         conn.close()
     
 def back_to_main_menu_tree():
+    """ This function hides the list all records frame and shows the main menu frame
+    """
     listallrecordsframe.place_forget()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
@@ -349,10 +452,17 @@ def back_to_main_menu_tree():
     tree["columns"] = ()
 
 def delete_record():
+    """ This function deletes a record from the database
+    """
     search_query = entry8.get()
     try:
         load_dotenv()
-        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
+        conn = mysql.connector.connect(user=os.getenv("USER"),
+                                       password=os.getenv("PASSWORD"),
+                                       host=os.getenv("HOST"),
+                                       database=os.getenv("DATABASE"),
+                                       charset=os.getenv("CHARSET"),
+                                       collation=os.getenv("COLLATION"))
         cursor = conn.cursor()
 
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
@@ -369,177 +479,385 @@ def delete_record():
 
 # Creating the login window with widgets
 
-loginframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
+loginframe = customtkinter.CTkFrame(master=l1,
+                                    width=320,
+                                    height=360,
+                                    corner_radius=15, )
 loginframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-l2 = customtkinter.CTkLabel(master=loginframe, text="Log into your account", font=("Century Gothic", 20))
+l2 = customtkinter.CTkLabel(master=loginframe,
+                            text="Log into your account",
+                            font=("Century Gothic", 20))
 l2.place(x=50, y=45)
 
-entry1 = customtkinter.CTkEntry(master=loginframe, width=220, placeholder_text="Username", font=("Century Gothic", 12))
+entry1 = customtkinter.CTkEntry(master=loginframe,
+                                width=220,
+                                placeholder_text="Username",
+                                font=("Century Gothic", 12))
 entry1.place(x=50, y=110)
 
-entry2 = customtkinter.CTkEntry(master=loginframe, width=220, placeholder_text="Password", font=("Century Gothic", 12))
+entry2 = customtkinter.CTkEntry(master=loginframe,
+                                width=220, placeholder_text="Password",
+                                font=("Century Gothic", 12))
 entry2.configure(show="*")
 entry2.place(x=50, y=165)
 
-button1 = customtkinter.CTkButton(master=loginframe, text="Login", width=100, font=("Century Gothic", 12), corner_radius=6, command=lambda:login(None))
+button1 = customtkinter.CTkButton(master=loginframe, text="Login",
+                                  width=100, font=("Century Gothic", 12),
+                                  corner_radius=6,
+                                  command=lambda:login(None))
 button1.place(x=50, y=240)
 app.bind("<Return>", login)
 
-button2 = customtkinter.CTkButton(master=loginframe, text="Create Account", width=100, font=("Century Gothic", 12), corner_radius=6, command=change_to_register)
+button2 = customtkinter.CTkButton(master=loginframe, text="Create Account",
+                                   width=100, font=("Century Gothic", 12),
+                                    corner_radius=6,
+                                    command=change_to_register)
 button2.place(x=160, y=240)
 
 # Creating the register user window with widgets
 
-registerframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
+registerframe = customtkinter.CTkFrame(master=l1,
+                                       width=320,
+                                       height=360,
+                                       corner_radius=15, )
 
-l3 = customtkinter.CTkLabel(master=registerframe, text="Create an account", font=("Century Gothic", 20))
+l3 = customtkinter.CTkLabel(master=registerframe,
+                            text="Create an account",
+                            font=("Century Gothic", 20))
 l3.place(x=50, y=45)
 
-entry3 = customtkinter.CTkEntry(master=registerframe, width=220, placeholder_text="Username", font=("Century Gothic", 12))
+entry3 = customtkinter.CTkEntry(master=registerframe,
+                                width=220,
+                                placeholder_text="Username",
+                                font=("Century Gothic", 12))
 entry3.place(x=50, y=110)
-entry4 = customtkinter.CTkEntry(master=registerframe, width=220, placeholder_text="Password", font=("Century Gothic", 12))
+entry4 = customtkinter.CTkEntry(master=registerframe,
+                                width=220, placeholder_text="Password",
+                                font=("Century Gothic", 12))
 entry4.configure(show="*")
 entry4.place(x=50, y=165)
 
-button3 = customtkinter.CTkButton(master=registerframe, text="Register", width=100, font=("Century Gothic", 12), corner_radius=6, command=register)
+button3 = customtkinter.CTkButton(master=registerframe,
+                                  text="Register", width=100,
+                                  font=("Century Gothic", 12),
+                                  corner_radius=6,
+                                  command=register)
 button3.place(x=50, y=240)
-button4 = customtkinter.CTkButton(master=registerframe, text="Back to login", width=100, font=("Century Gothic", 12), corner_radius=6, command=back_to_login)
+button4 = customtkinter.CTkButton(master=registerframe,
+                                  text="Back to login",
+                                  width=100,
+                                  font=("Century Gothic", 12),
+                                  corner_radius=6,
+                                  command=back_to_login)
 button4.place(x=160, y=240)
 
 # Creating the main menu window with widgets
 
-mainmenuframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
+mainmenuframe = customtkinter.CTkFrame(master=l1,
+                                       width=320,
+                                       height=360,
+                                       corner_radius=15, )
 
-l4 = customtkinter.CTkLabel(master=mainmenuframe, text="Main Menu", font=("Century Gothic", 20))
+l4 = customtkinter.CTkLabel(master=mainmenuframe,
+                            text="Main Menu",
+                            font=("Century Gothic", 20))
 l4.place(x=110, y=45)
 
-button5 = customtkinter.CTkButton(master=mainmenuframe, text="Add Record", width=220, font=("Century Gothic", 12), corner_radius=6, command=go_to_add_record)
+button5 = customtkinter.CTkButton(master=mainmenuframe,
+                                  text="Add Record", width=220,
+                                  font=("Century Gothic", 12),
+                                  corner_radius=6,
+                                  command=go_to_add_record)
 button5.place(x=50, y=100)
-button6 = customtkinter.CTkButton(master=mainmenuframe, text="Retrieve Record", width=220, font=("Century Gothic", 12), corner_radius=6, command=go_to_retrieve_record)
+button6 = customtkinter.CTkButton(master=mainmenuframe,
+                                  text="Retrieve Record",
+                                  width=220, font=("Century Gothic", 12),
+                                  corner_radius=6,
+                                  command=go_to_retrieve_record)
 button6.place(x=50, y=145)
-button8 = customtkinter.CTkButton(master=mainmenuframe, text="List All Records", width=220, font=("Century Gothic", 12), corner_radius=6, command=go_to_list_all_records)
+button8 = customtkinter.CTkButton(master=mainmenuframe,
+                                  text="List All Records",
+                                  width=220, font=("Century Gothic", 12),
+                                  corner_radius=6,
+                                  command=go_to_list_all_records)
 button8.place(x=50, y=235)
-button9 = customtkinter.CTkButton(master=mainmenuframe, text="Logout", width=220, font=("Century Gothic", 12), corner_radius=6, command=logout)
+button9 = customtkinter.CTkButton(master=mainmenuframe,
+                                  text="Logout", width=220,
+                                  font=("Century Gothic", 12),
+                                  corner_radius=6,
+                                  command=logout)
 button9.place(x=50, y=280)
-button19 = customtkinter.CTkButton(master=mainmenuframe, text="Generate Password", width=220, font=("Century Gothic", 12), corner_radius=6, command=go_to_generate_password)
+button19 = customtkinter.CTkButton(master=mainmenuframe,
+                                   text="Generate Password",
+                                   width=220,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=go_to_generate_password)
 button19.place(x=50, y=190)
 
 # Creating the add record window with widgets
 
-addrecordframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
+addrecordframe = customtkinter.CTkFrame(master=l1,
+                                        width=320,
+                                        height=360,
+                                        corner_radius=15, )
 
-l5 = customtkinter.CTkLabel(master=addrecordframe, text="Add Record", font=("Century Gothic", 20))
+l5 = customtkinter.CTkLabel(master=addrecordframe,
+                            text="Add Record",
+                            font=("Century Gothic", 20))
 l5.place(x=110, y=45)
 
-entry5 = customtkinter.CTkEntry(master=addrecordframe, width=220, placeholder_text="Username", font=("Century Gothic", 12))
+entry5 = customtkinter.CTkEntry(master=addrecordframe,
+                                width=220,
+                                placeholder_text="Username",
+                                font=("Century Gothic", 12))
 entry5.place(x=50, y=100)
-entry6 = customtkinter.CTkEntry(master=addrecordframe, width=220, placeholder_text="Application", font=("Century Gothic", 12))
+entry6 = customtkinter.CTkEntry(master=addrecordframe,
+                                width=220,
+                                placeholder_text="Application",
+                                font=("Century Gothic", 12))
 entry6.place(x=50, y=145)
-entry7 = customtkinter.CTkEntry(master=addrecordframe, width=220, placeholder_text="Password", font=("Century Gothic", 12))
+entry7 = customtkinter.CTkEntry(master=addrecordframe,
+                                width=220,
+                                placeholder_text="Password",
+                                font=("Century Gothic", 12))
 entry7.place(x=50, y=190)
 
-button10 = customtkinter.CTkButton(master=addrecordframe, text="Add Record", width=100, font=("Century Gothic", 12), corner_radius=6, command=create_record)
+button10 = customtkinter.CTkButton(master=addrecordframe,
+                                   text="Add Record",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=create_record)
 button10.place(x=50, y=240)
-button11 = customtkinter.CTkButton(master=addrecordframe, text="Back to Main Menu", width=100, font=("Century Gothic", 12), corner_radius=6, command=back_to_main_menu)
+button11 = customtkinter.CTkButton(master=addrecordframe,
+                                   text="Back to Main Menu",
+                                   width=100, font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=back_to_main_menu)
 button11.place(x=160, y=240)
-button23 = customtkinter.CTkButton(master=addrecordframe, text="Generate Password", width=100, font=("Century Gothic", 12), corner_radius=6, command=generate_password)
+button23 = customtkinter.CTkButton(master=addrecordframe,
+                                   text="Generate Password",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=generate_password)
 button23.place(x=50, y=280)
 
 
 # Creating the retrieve record window with widgets
 
-retrieverecordframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
+retrieverecordframe = customtkinter.CTkFrame(master=l1,
+                                             width=320,
+                                             height=360,
+                                             corner_radius=15, )
 
-l6 = customtkinter.CTkLabel(master=retrieverecordframe, text="Retrieve Record", font=("Century Gothic", 20))
+l6 = customtkinter.CTkLabel(master=retrieverecordframe,
+                            text="Retrieve Record",
+                            font=("Century Gothic", 20))
 l6.place(x=90, y=45)
 
-entry8 = customtkinter.CTkEntry(master=retrieverecordframe, width=220, placeholder_text="Application", font=("Century Gothic", 12))
+entry8 = customtkinter.CTkEntry(master=retrieverecordframe,
+                                width=220,
+                                placeholder_text="Application",
+                                font=("Century Gothic", 12))
 entry8.place(x=50, y=100)
 
-button12 = customtkinter.CTkButton(master=retrieverecordframe, text="Search", width=100, font=("Century Gothic", 12), corner_radius=6, command=search_record)
+button12 = customtkinter.CTkButton(master=retrieverecordframe,
+                                   text="Search",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=search_record)
 button12.place(x=40, y=145)
-button13 = customtkinter.CTkButton(master=retrieverecordframe, text="Main Menu", width=100, font=("Century Gothic", 12), corner_radius=6, command=back_to_main_menu)
+button13 = customtkinter.CTkButton(master=retrieverecordframe,
+                                   text="Main Menu",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=back_to_main_menu)
 button13.place(x=160, y=145)
 
-label_app = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_app = customtkinter.CTkLabel(master=retrieverecordframe,
+                                   text="",
+                                   font=("Century Gothic", 12))
 label_app.place(x=20, y=190)
-label_app_result = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_app_result = customtkinter.CTkLabel(master=retrieverecordframe,
+                                          text="",
+                                          font=("Century Gothic", 12))
 label_app_result.place(x=20, y=210)
-label_username = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_username = customtkinter.CTkLabel(master=retrieverecordframe,
+                                        text="",
+                                        font=("Century Gothic", 12))
 label_username.place(x=130, y=190)
-label_username_result = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_username_result = customtkinter.CTkLabel(master=retrieverecordframe,
+                                               text="",
+                                               font=("Century Gothic", 12))
 label_username_result.place(x=130, y=210)
-label_password = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_password = customtkinter.CTkLabel(master=retrieverecordframe,
+                                        text="",
+                                        font=("Century Gothic", 12))
 label_password.place(x=230, y=190)
-label_password_result = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_password_result = customtkinter.CTkLabel(master=retrieverecordframe,
+                                               text="",
+                                               font=("Century Gothic", 12))
 label_password_result.place(x=230, y=210)
 
-button14 = customtkinter.CTkButton(master=retrieverecordframe, text="Copy Password", width=100, font=("Century Gothic", 12), corner_radius=6, command=copy_password)
-button15 = customtkinter.CTkButton(master=retrieverecordframe, text="Modify Record", width=100, font=("Century Gothic", 12), corner_radius=6, command=go_to_modify_record)
-button24 = customtkinter.CTkButton(master=retrieverecordframe, fg_color="RED", text="Delete Record", width=100, font=("Century Gothic", 12), corner_radius=6, command=delete_record)
+button14 = customtkinter.CTkButton(master=retrieverecordframe,
+                                   text="Copy Password",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=copy_password)
+button15 = customtkinter.CTkButton(master=retrieverecordframe,
+                                   text="Modify Record",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=go_to_modify_record)
+button24 = customtkinter.CTkButton(master=retrieverecordframe,
+                                   fg_color="RED",
+                                   text="Delete Record",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=delete_record)
 
 # Creating the modify record window with widgets
-modifyrecordframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
+modifyrecordframe = customtkinter.CTkFrame(master=l1,
+                                           width=320,
+                                           height=360,
+                                           corner_radius=15, )
 
-l7 = customtkinter.CTkLabel(master=modifyrecordframe, text="Modify Record", font=("Century Gothic", 20))
+l7 = customtkinter.CTkLabel(master=modifyrecordframe,
+                            text="Modify Record",
+                            font=("Century Gothic", 20))
 l7.place(x=90, y=45)
 
-entry9 = customtkinter.CTkEntry(master=modifyrecordframe, width=220, placeholder_text="Application", font=("Century Gothic", 12))
+entry9 = customtkinter.CTkEntry(master=modifyrecordframe,
+                                width=220,
+                                placeholder_text="Application",
+                                font=("Century Gothic", 12))
 entry9.place(x=50, y=100)
-entry10 = customtkinter.CTkEntry(master=modifyrecordframe, width=220, placeholder_text="New Username", font=("Century Gothic", 12))
+entry10 = customtkinter.CTkEntry(master=modifyrecordframe,
+                                 width=220,
+                                 placeholder_text="New Username",
+                                 font=("Century Gothic", 12))
 entry10.place(x=50, y=145)
-entry11 = customtkinter.CTkEntry(master=modifyrecordframe, width=220, placeholder_text="New Password", font=("Century Gothic", 12))
+entry11 = customtkinter.CTkEntry(master=modifyrecordframe,
+                                 width=220,
+                                 placeholder_text="New Password",
+                                 font=("Century Gothic", 12))
 entry11.place(x=50, y=190)
 
-button16 = customtkinter.CTkButton(master=modifyrecordframe, text="Submit", width=100, font=("Century Gothic", 12), corner_radius=6, command=modify_searched_record)
+button16 = customtkinter.CTkButton(master=modifyrecordframe,
+                                   text="Submit",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=modify_searched_record)
 button16.place(x=40, y=240)
-button17 = customtkinter.CTkButton(master=modifyrecordframe, text="Main Menu", width=100, font=("Century Gothic", 12), corner_radius=6, command=back_to_main_menu)
+button17 = customtkinter.CTkButton(master=modifyrecordframe,
+                                   text="Main Menu",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=back_to_main_menu)
 button17.place(x=160, y=240)
 
-label_app_mod = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_app_mod = customtkinter.CTkLabel(master=retrieverecordframe,
+                                       text="",
+                                       font=("Century Gothic", 12))
 label_app_mod.place(x=20, y=190)
-label_app_result_mod = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_app_result_mod = customtkinter.CTkLabel(master=retrieverecordframe,
+                                              text="",
+                                              font=("Century Gothic", 12))
 label_app_result_mod.place(x=20, y=210)
-label_username_mod = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_username_mod = customtkinter.CTkLabel(master=retrieverecordframe,
+                                            text="",
+                                            font=("Century Gothic", 12))
 label_username_mod.place(x=130, y=190)
-label_username_result_mod = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_username_result_mod = customtkinter.CTkLabel(master=retrieverecordframe,
+                                                   text="",
+                                                   font=("Century Gothic", 12))
 label_username_result_mod.place(x=130, y=210)
-label_password_mod = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_password_mod = customtkinter.CTkLabel(master=retrieverecordframe,
+                                            text="",
+                                            font=("Century Gothic", 12))
 label_password_mod.place(x=230, y=190)
-label_password_result_mod = customtkinter.CTkLabel(master=retrieverecordframe, text="", font=("Century Gothic", 12))
+label_password_result_mod = customtkinter.CTkLabel(master=retrieverecordframe,
+                                                   text="",
+                                                   font=("Century Gothic", 12))
 label_password_result_mod.place(x=230, y=210)
 
 # Creating the list all records window with widgets
 
-listallrecordsframe = customtkinter.CTkFrame(master=l1, width=500, height=400, corner_radius=15, )
+listallrecordsframe = customtkinter.CTkFrame(master=l1,
+                                             width=500,
+                                             height=400,
+                                             corner_radius=15)
 
-l8 = customtkinter.CTkLabel(master=listallrecordsframe, text="List All Records", font=("Century Gothic", 20))
+l8 = customtkinter.CTkLabel(master=listallrecordsframe,
+                            text="List All Records",
+                            font=("Century Gothic", 20))
 l8.place(x=110, y=30)
 
-tree=ttk.Treeview(master=listallrecordsframe, columns=("Application", "Username", "Password"), show="headings", height=10)
+tree=ttk.Treeview(master=listallrecordsframe,
+                  columns=("Application", "Username", "Password"), 
+                  show="headings", height=10)
 
-button18 = customtkinter.CTkButton(master=listallrecordsframe, text="Main Menu", width=100, font=("Century Gothic", 12), corner_radius=6, command=back_to_main_menu_tree)
+button18 = customtkinter.CTkButton(master=listallrecordsframe,
+                                   text="Main Menu",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=back_to_main_menu_tree)
 button18.place(x=160, y=360)
 
 
 # Creating the generate password window with widgets
 
-generatepasswordframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )
+generatepasswordframe = customtkinter.CTkFrame(master=l1,
+                                               width=320,
+                                               height=360,
+                                               corner_radius=15, )
 
-l9 = customtkinter.CTkLabel(master=generatepasswordframe, text="Generate Password", font=("Century Gothic", 20))
+l9 = customtkinter.CTkLabel(master=generatepasswordframe,
+                            text="Generate Password",
+                            font=("Century Gothic", 20))
 l9.place(x=70, y=45)
 
-entry12 = customtkinter.CTkEntry(master=generatepasswordframe, width=220, placeholder_text="Length", font=("Century Gothic", 12))
+entry12 = customtkinter.CTkEntry(master=generatepasswordframe,
+                                 width=220,
+                                 placeholder_text="Length",
+                                 font=("Century Gothic", 12))
 entry12.place(x=50, y=100)
 
-button20 = customtkinter.CTkButton(master=generatepasswordframe, text="Generate", width=100, font=("Century Gothic", 12), corner_radius=6, command=generate_password)
+button20 = customtkinter.CTkButton(master=generatepasswordframe,
+                                   text="Generate",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=generate_password)
 button20.place(x=50, y=150)
-button21 = customtkinter.CTkButton(master=generatepasswordframe, text="Main Menu", width=100, font=("Century Gothic", 12), corner_radius=6, command=back_to_main_menu)
+button21 = customtkinter.CTkButton(master=generatepasswordframe,
+                                   text="Main Menu",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=back_to_main_menu)
 button21.place(x=160, y=150)
-button22 = customtkinter.CTkButton(master=generatepasswordframe, text="Copy Password", width=100, font=("Century Gothic", 12), corner_radius=6, command=copy_password)
+button22 = customtkinter.CTkButton(master=generatepasswordframe,
+                                   text="Copy Password",
+                                   width=100,
+                                   font=("Century Gothic", 12),
+                                   corner_radius=6,
+                                   command=copy_password)
 
-generated_password = customtkinter.CTkLabel(master=generatepasswordframe, text="", font=("Century Gothic", 12))
+generated_password = customtkinter.CTkLabel(master=generatepasswordframe,
+                                            text="",
+                                            font=("Century Gothic", 12))
 generated_password.place(x=50, y=200)
 
 # Running the application loop

@@ -3,7 +3,12 @@ import os
 from dotenv import load_dotenv, dotenv_values
 
 load_dotenv()
-conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
+conn = mysql.connector.connect(user=os.getenv("USER"),
+                               password=os.getenv("PASSWORD"),
+                               host=os.getenv("HOST"),
+                               database=os.getenv("DATABASE"),
+                               charset=os.getenv("CHARSET"),
+                               collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
 def on_initiation():
