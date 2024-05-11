@@ -35,15 +35,27 @@ img1 = ImageTk.PhotoImage(img1.resize((600, 440)))
 l1 = customtkinter.CTkLabel(master=app, image=img1)
 l1.pack()
 
+versionlabel = customtkinter.CTkLabel(master=app, text=" Version 1.0 ", font=("Century Gothic", 10))
+versionlabel.place(x=280, y=420)
+
+menubar = tk.Menu(app)
+file_menu = tk.Menu(menubar, tearoff=0)
+menubar.add_cascade(label="File", menu=file_menu)
+app.config(menu=menubar)
+
+file_menu.add_command(label="About", command=lambda: tk.messagebox.showinfo("About", "VikingCrypt Protector is a password manager application that allows you to store and retrieve your passwords securely." + versionlabel))
+file_menu.add_command(label="Help", command=lambda: tk.messagebox.showinfo("Help", "If you need help, please contact the developer at:)"))
+file_menu.add_command(label="Exit", command=app.quit)
+
+
 # Global variables
 current_frame = "loginframe"
 master_password = ""
 account_username = ""
+versionlabel = "  Version 1.0  "
 
 #TODO:
-# Add about window/page
-# Add help window/page
-# Add text at bottow of main window with version number
+# Add delete record button to the modify record window
 
 # Functions
 
@@ -62,7 +74,7 @@ def back_to_main_menu():
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
     current_frame = "mainmenuframe"
 
-def login():
+def login(event):
     username = entry1.get()
     password = entry2.get()
     is_user_authenticated = False
@@ -81,6 +93,7 @@ def login():
         conn.close()
     
     loginframe.place_forget()
+    unbind_button_to_login()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
     global master_password, account_username
@@ -89,7 +102,13 @@ def login():
     entry1.delete(0, tk.END)
     entry2.delete(0, tk.END)
     entry1.focus()
-    
+
+def unbind_button_to_login():
+    app.unbind("<Return>")
+
+def bind_button_to_login():
+    app.bind("<Return>", login)
+
 def change_to_register():
     loginframe.place_forget()
     registerframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
@@ -170,6 +189,7 @@ def logout():
     global current_frame
     current_frame = "loginframe"
     mainmenuframe.place_forget()
+    bind_button_to_login()
     loginframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def go_to_generate_password():
@@ -223,6 +243,7 @@ def search_record():
             label_password_result.configure(text=app_dec_password)
             button14.place(x=40, y=260)
             button15.place(x=160, y=260)
+            button24.place(x=110, y=300)
 
     except:
         tk.messagebox.showerror("Error", "An error has occured. Please try again later.")
@@ -327,6 +348,24 @@ def back_to_main_menu_tree():
     tree.delete(*tree.get_children())
     tree["columns"] = ()
 
+def delete_record():
+    search_query = entry8.get()
+    try:
+        load_dotenv()
+        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
+        cursor = conn.cursor()
+
+        cursor.execute(f'USE {os.getenv("DATABASE")} ')
+        query = 'DELETE FROM {} WHERE application = %s;'.format(account_username)
+        cursor.execute(query, (search_query,))
+        conn.commit()
+        tk.messagebox.showinfo("Success", "The record has been deleted successfully.")
+        back_to_main_menu()
+    except Exception as error:
+        tk.messagebox.showerror("Error", f"An error has occured: {error}")
+    finally:
+        cursor.close()
+        conn.close()
 
 # Creating the login window with widgets
 
@@ -343,8 +382,10 @@ entry2 = customtkinter.CTkEntry(master=loginframe, width=220, placeholder_text="
 entry2.configure(show="*")
 entry2.place(x=50, y=165)
 
-button1 = customtkinter.CTkButton(master=loginframe, text="Login", width=100, font=("Century Gothic", 12), corner_radius=6, command=login)
+button1 = customtkinter.CTkButton(master=loginframe, text="Login", width=100, font=("Century Gothic", 12), corner_radius=6, command=lambda:login(None))
 button1.place(x=50, y=240)
+app.bind("<Return>", login)
+
 button2 = customtkinter.CTkButton(master=loginframe, text="Create Account", width=100, font=("Century Gothic", 12), corner_radius=6, command=change_to_register)
 button2.place(x=160, y=240)
 
@@ -436,6 +477,7 @@ label_password_result.place(x=230, y=210)
 
 button14 = customtkinter.CTkButton(master=retrieverecordframe, text="Copy Password", width=100, font=("Century Gothic", 12), corner_radius=6, command=copy_password)
 button15 = customtkinter.CTkButton(master=retrieverecordframe, text="Modify Record", width=100, font=("Century Gothic", 12), corner_radius=6, command=go_to_modify_record)
+button24 = customtkinter.CTkButton(master=retrieverecordframe, fg_color="RED", text="Delete Record", width=100, font=("Century Gothic", 12), corner_radius=6, command=delete_record)
 
 # Creating the modify record window with widgets
 modifyrecordframe = customtkinter.CTkFrame(master=l1, width=320, height=360, corner_radius=15, )

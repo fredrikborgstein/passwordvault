@@ -1,7 +1,7 @@
 import mysql.connector
 import os
 import bcrypt
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
@@ -19,12 +19,9 @@ def authenticate(username, password):
     if account_information:
         decrypted_password = account_information[0].decode('utf-8')
         if bcrypt.checkpw(password.encode('utf-8'), decrypted_password.encode('utf-8')):
-            print("Password is correct")
             return True
         else:
-            print("Password is incorrect")
             return False
     else:
-        print("No record found for the provided username.")
         return False
 
