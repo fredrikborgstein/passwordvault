@@ -1,4 +1,5 @@
-"""This module is the main module of the application. It contains the main window and all the functions that are used to interact with the database and the user interface.
+"""This module is the main module of the application. It contains the main window 
+    and all the functions that are used to interact with the database and the user interface.
 """
 
 # Importing external modules
@@ -38,8 +39,8 @@ img1 = ImageTk.PhotoImage(img1.resize((600, 440)))
 l1 = customtkinter.CTkLabel(master=app, image=img1)
 l1.pack()
 
-versionlabel = customtkinter.CTkLabel(master=app, 
-                                      text=" Version 1.0 ", 
+versionlabel = customtkinter.CTkLabel(master=app,
+                                      text=" Version 1.0 ",
                                       font=("Century Gothic", 10))
 versionlabel.place(x=280, y=420)
 
@@ -48,13 +49,13 @@ file_menu = tk.Menu(menubar, tearoff=0)
 menubar.add_cascade(label="File", menu=file_menu)
 app.config(menu=menubar)
 
-file_menu.add_command(label="About", 
-                      command=lambda: 
+file_menu.add_command(label="About",
+                      command=lambda:
                       tk.messagebox.showinfo("About", "VikingCrypt Protector is a password manager application that allows you to store and retrieve your passwords securely." + versionlabel))
-file_menu.add_command(label="Help", 
-                      command=lambda: 
+file_menu.add_command(label="Help",
+                      command=lambda:
                       tk.messagebox.showinfo("Help", "If you need help, please contact the developer at:)"))
-file_menu.add_command(label="Exit", 
+file_menu.add_command(label="Exit",
                       command=app.quit)
 
 
@@ -95,11 +96,11 @@ def login(event):
     is_user_authenticated = False
 
     load_dotenv()
-    conn = mysql.connector.connect(user=os.getenv("USER"), 
-                                   password=os.getenv("PASSWORD"), 
-                                   host=os.getenv("HOST"), 
-                                   database=os.getenv("DATABASE"), 
-                                   charset=os.getenv("CHARSET"), 
+    conn = mysql.connector.connect(user=os.getenv("USER"),
+                                   password=os.getenv("PASSWORD"),
+                                   host=os.getenv("HOST"),
+                                   database=os.getenv("DATABASE"),
+                                   charset=os.getenv("CHARSET"),
                                    collation=os.getenv("COLLATION"))
     cursor = conn.cursor()
 
@@ -112,7 +113,7 @@ def login(event):
     finally:
         cursor.close()
         conn.close()
-    
+
     loginframe.place_forget()
     unbind_button_to_login()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
@@ -172,25 +173,25 @@ def register():
     is_user_created = False
 
     load_dotenv()
-    conn = mysql.connector.connect(user=os.getenv("USER"), 
-                                   password=os.getenv("PASSWORD"), 
-                                   host=os.getenv("HOST"), 
-                                   database=os.getenv("DATABASE"), 
-                                   charset=os.getenv("CHARSET"), 
+    conn = mysql.connector.connect(user=os.getenv("USER"),
+                                   password=os.getenv("PASSWORD"),
+                                   host=os.getenv("HOST"),
+                                   database=os.getenv("DATABASE"),
+                                   charset=os.getenv("CHARSET"),
                                    collation=os.getenv("COLLATION"))
     cursor = conn.cursor()
 
     try:
         is_user_created = create_user(username, password)
         if not is_user_created:
-            tk.messagebox.showerror("Error", "The username is already taken.")  
+            tk.messagebox.showerror("Error", "The username is already taken.")
 
     except Exception as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")
     finally:
         cursor.close()
         conn.close()
-    
+
     registerframe.place_forget()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
@@ -205,7 +206,7 @@ def go_to_add_record():
     current_frame = "addrecordframe"
     mainmenuframe.place_forget()
     addrecordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-    
+
 def go_to_retrieve_record():
     """ This function hides the main menu frame and shows the retrieve record frame
     """
@@ -373,7 +374,6 @@ def modify_searched_record():
             label_password_mod.configure(text="Password: ")
             label_password_result_mod.configure(text=app_dec_password)
             button16.place_forget()
-    
     except Exception as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")
     finally:
@@ -399,7 +399,6 @@ def on_open_listall():
                     font=("Century Gothic", 12),
                     background="black")
 
-    
     tree=ttk.Treeview(master=listallrecordsframe,
                       columns=("Application", "Username", "Password"),
                       show="headings",
@@ -414,14 +413,18 @@ def on_open_listall():
 
     try:
         load_dotenv()
-        conn = mysql.connector.connect(user=os.getenv("USER"), password=os.getenv("PASSWORD"), host=os.getenv("HOST"), database=os.getenv("DATABASE"), charset=os.getenv("CHARSET"), collation=os.getenv("COLLATION"))
+        conn = mysql.connector.connect(user=os.getenv("USER"),
+                                       password=os.getenv("PASSWORD"),
+                                       host=os.getenv("HOST"),
+                                       database=os.getenv("DATABASE"),
+                                       charset=os.getenv("CHARSET"),
+                                       collation=os.getenv("COLLATION"))
         cursor = conn.cursor()
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
         cursor.execute(f'SELECT * FROM {account_username};')
         record = cursor.fetchall()
 
         for l in record:
-                
             application_name = l[2]
             application_username = l[1]
             application_encrypted_password = l[3]
@@ -432,14 +435,12 @@ def on_open_listall():
             f = Fernet(key)
             decrypted_password = f.decrypt(application_encrypted_password).decode("utf-8")
             tree.insert("", "end", values=(application_name, application_username, decrypted_password))
-            
-
     except:
         tk.messagebox.showerror("Error", "An error has occured. Please try again later.")
     finally:
         cursor.close()
         conn.close()
-    
+
 def back_to_main_menu_tree():
     """ This function hides the list all records frame and shows the main menu frame
     """
@@ -804,7 +805,7 @@ l8 = customtkinter.CTkLabel(master=listallrecordsframe,
 l8.place(x=110, y=30)
 
 tree=ttk.Treeview(master=listallrecordsframe,
-                  columns=("Application", "Username", "Password"), 
+                  columns=("Application", "Username", "Password"),
                   show="headings", height=10)
 
 button18 = customtkinter.CTkButton(master=listallrecordsframe,

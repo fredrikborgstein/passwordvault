@@ -49,7 +49,7 @@ def create_user(username, password):
         return False
     else:
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        cursor.execute('INSERT INTO master_account_records (accountUsername, accountPassword) VALUES (%s, aes_encrypt(%s, %s))', 
+        cursor.execute('INSERT INTO master_account_records (accountUsername, accountPassword) VALUES (%s, aes_encrypt(%s, %s))',
                        (username, bcrypt_hash_utf8, encryption_key))
         cursor.execute(f'CREATE TABLE IF NOT EXISTS {username}(id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) NOT NULL, application VARCHAR(255) NOT NULL, password BLOB(255) NOT NULL, salt BLOB(255) NOT NULL)')
         conn.commit()
