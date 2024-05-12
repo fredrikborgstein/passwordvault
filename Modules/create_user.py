@@ -31,7 +31,7 @@ def hash_password(pass_string):
     return hashed_password
 
 
-def create_user_func(username, password):
+def create_user(username, password):
     hashed_password = hash_password(password)
     bcrypt_hash_utf8 = hashed_password.decode('utf-8')
     encryption_key = os.getenv("ENCRYPTION_KEY")

@@ -7,10 +7,9 @@ Returns:
 
 import os
 import mysql.connector
-from mysql.connector import Error
 from dotenv import load_dotenv
-from cryptography.fernet import Fernet
-from Modules.utilities import create_fernet_key
+from Modules.utilities import get_account_id
+from Modules.add_record import add_record
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -22,42 +21,26 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
 cursor = conn.cursor()
 
 
-def modify_record(username, master_password,
+def modify_record(username,
+                  master_password,
                   record_to_modify,
-                  new_application_name,
-                  new_application_username,
-                  new_application_password):
-    """Modifies a record in the database
+                  new_app_name,
+                  new_app_uname,
+                  new_app_psw):
+    # Begin by getting accountID
+    account_id = get_account_id(username)
 
-    Args:
-        username (string): The username of the user
-        master_password (string): The master password of the user
-        record_to_modify (string): The name of the application to be modified
-        new_application_name (string): The new name for the application being modified
-        new_application_username (string): The new username for the application being modified
-        new_application_password (string): The new password for the application being modified
+    # Check if the record exists
 
-    Returns:
-        Boolean: Returns True if the record was
-        successfully modified, False if the record does not exist
-    """
-
-    try:
-        cursor.execute(f'DELETE FROM {username} WHERE application = "{record_to_modify}";')
-
-        key, salt = create_fernet_key(bytes(master_password, encoding="utf-8"))
-        f = Fernet(key)
-        token = f.encrypt(new_application_password.encode("utf-8"))
-        cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        query = '''INSERT INTO %s (username, application, password, salt)
-                VALUES (%s, %s, %s, %s);'''
-        cursor.execute(query, (username,
-                               new_application_username,
-                               new_application_name,
-                               token,
-                               salt))
-        conn.commit()
-        return True, new_application_name, new_application_username, new_application_password
-    except Error as e:
-        print(e)
+    exist_search = '''SELECT applicationName FROM user_application_records
+                        WHERE accountID = %s'''
+    cursor.execute(exist_search, (account_id,))
+    does_exist = cursor.fetchone()
+    if not does_exist:
+        print('No record found')
         return False
+    delete_current_record = '''DELETE FROM user_application_records
+                                WHERE applicationName = %s AND accountID = %s'''
+    cursor.execute(delete_current_record, (record_to_modify, account_id))
+    add_record(master_password, username, new_app_uname, new_app_psw, new_app_name)
+    return True

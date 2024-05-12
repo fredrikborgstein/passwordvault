@@ -17,7 +17,7 @@ from cryptography.fernet import Fernet
 # Importing internal modules
 from Modules.add_record import add_record
 from Modules.retrieve_record import retrieve_record
-from Modules.authentication import authenticate
+from Modules.authentication import authentication
 from Modules.create_user import create_user
 from Modules.utilities import derive_fernet_key
 from Modules.modify_record import modify_record
@@ -113,7 +113,7 @@ def login(event):
     cursor = conn.cursor()
 
     try:
-        is_user_authenticated = authenticate(username, password)
+        is_user_authenticated = authentication(username, password)
         if not is_user_authenticated:
             tk.messagebox.showerror("Error", "The username or password is incorrect.")
             return False
@@ -378,12 +378,12 @@ def modify_searched_record():
     cursor = conn.cursor()
 
     try:
-        is_record_modified, app_username, appl, app_dec_password = modify_record(ACCOUNT_USERNAME,
-                                                                                 MASTER_PASSWORD,
-                                                                                 application,
-                                                                                 new_app_name,
-                                                                                 new_app_username,
-                                                                                 new_app_password)
+        is_record_modified = modify_record(ACCOUNT_USERNAME,
+                                           MASTER_PASSWORD,
+                                           application,
+                                           new_app_name,
+                                           new_app_username,
+                                           new_app_password)
         if not is_record_modified:
             tk.messagebox.showerror("Error", "No changes made to the record")
         else:
@@ -393,11 +393,11 @@ def modify_searched_record():
             entry11.delete(0, tk.END)
 
             label_app_mod.configure(text="Application: ")
-            label_app_result_mod.configure(text=appl)
+            label_app_result_mod.configure(text=application)
             label_username_mod.configure(text="Username: ")
-            label_username_result_mod.configure(text=app_username)
+            label_username_result_mod.configure(text=new_app_username)
             label_password_mod.configure(text="Password: ")
-            label_password_result_mod.configure(text=app_dec_password)
+            label_password_result_mod.configure(text=new_app_password)
             button16.place_forget()
     except Error as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")

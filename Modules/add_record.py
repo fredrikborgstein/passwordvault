@@ -34,7 +34,7 @@ def add_record(master_password, username, app_username, app_password, applicatio
 
     if does_exist:
         return False
-    
+
     # If the record doesn't exist, create the record
     key, salt = create_fernet_key(bytes(master_password, encoding='utf-8'))
     fernet_key = Fernet(key)
