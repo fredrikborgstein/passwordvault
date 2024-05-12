@@ -5,7 +5,7 @@ import mysql.connector
 from mysql.connector import Error
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
-from Modules.utilities import derive_fernet_key
+from utilities import derive_fernet_key, get_account_id
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -17,34 +17,43 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
 cursor = conn.cursor()
 
 
-def list_all_records(username, master_password):
-    """Lists all records for the user
+def new_list_all_records(username, master_password):
+    # Begin by getting the accountID
+    account_id = get_account_id(username)
 
-    Args:
-        username (string): The username of the user
-        master_password (string): The master password of the user
-    """
     try:
-        cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        cursor.execute(f'SELECT * FROM {username};')
-        record = cursor.fetchall()
+        search_query = '''SELECT recordID, applicationUsername, applicationName
+                          FROM user_application_records
+                          WHERE accountID = %s'''
+        cursor.execute(search_query, (account_id,))
+        application_list = cursor.fetchall()
+        app_encryption_key = os.getenv("ENCRYPTION_KEY")
 
-        for item in record:
-            application_name = item[2]
-            application_username = item[1]
-            application_encrypted_password = item[3]
-            application_salt = item[4]
-            salt = bytes(application_salt, encoding="utf-8")
-            key = derive_fernet_key(bytes(master_password, encoding="utf-8"), salt)
-            f = Fernet(key)
-            decrypted_password = f.decrypt(application_encrypted_password).decode("utf-8")
-            print("-" * 50)
-            print(f"Application: {application_name}")
-            print(f"Username: {application_username}")
-            print(f"Password: {decrypted_password}")
-
-    except Error as error:
-        print("Error", "An error has occured: ", error)
+        if not application_list:
+            return False
+        
+        for record in application_list:
+            record_id = record[0]
+            application_name = record[2]
+            application_uname = record[1]
+            salt_search = 'SELECT salt FROM salt_records WHERE recordID = %s'
+            cursor.execute(salt_search, (record_id,))
+            salt = bytes(cursor.fetchone()[0], encoding='utf-8')
+            enc_key_search = '''SELECT aes_decrypt(`key`, %s) FROM encryption_keys 
+                                WHERE recordID = %s'''
+            cursor.execute(enc_key_search, (app_encryption_key, record_id))
+            enc_key = cursor.fetchone()[0]
+            app_psw_search = '''SELECT aes_decrypt(encryptedPassword, %s) FROM application_passwords
+                                WHERE recordID = %s'''
+            cursor.execute(app_psw_search, (enc_key, record_id))
+            encrypted_password = cursor.fetchone()[0].decode('utf-8')
+            fernet_key = derive_fernet_key(bytes(master_password, encoding='utf-8'), salt)
+            f = Fernet(fernet_key)
+            decrypted_password = f.decrypt(encrypted_password).decode('utf-8')
+            print(application_name, application_uname, decrypted_password)
+            
+    except Error as e:
+        print(f'An error has occured: {e}')
     finally:
         cursor.close()
         conn.close()

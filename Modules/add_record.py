@@ -8,7 +8,7 @@ import os
 import mysql.connector
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
-from Modules.utilities import create_fernet_key
+from Modules.utilities import create_fernet_key, get_account_id
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -20,35 +20,39 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
 cursor = conn.cursor()
 
 
-def add_record(master_password, username, app_username, app_password, app):
-    """Adds a record to the database for the user
+def add_record(master_password, username, app_username, app_password, application_name):
+    # Start by fetching accountID for the useraccount
+    account_id = get_account_id(username)
 
-    Args:
-        master_password (string): the users master password for the application
-        username (string): the username of the user
-        app_username (string): the username for the application being added to the db record
-        app_password (string): the password for the application being added to the db record
-        app (string): the name of the application being added to the db record
+    # Check if the new record is already in the database
 
-    Returns:
-        boolean: returns True if the record was
-        successfully added, False if the record already exists
-    """
-    cursor.execute(f'USE {os.getenv("DATABASE")} ')
-    search_query = 'SELECT application FROM %s WHERE application = %s;'
-    cursor.execute(search_query, (username, app))
-    record = cursor.fetchall()
-    if not record:
-        key, salt = create_fernet_key(bytes(master_password, encoding="utf-8"))
-        f = Fernet(key)
-        token = f.encrypt(app_password.encode("utf-8"))
+    search_query = '''SELECT applicationName FROM user_application_records
+                      WHERE accountID = %s AND applicationName = %s '''
+    cursor.execute(search_query, (account_id, application_name))
+    does_exist = cursor.fetchone()
+    print(does_exist)
 
-        cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        query = '''INSERT INTO %s (username,
-                                    application,
-                                    password,
-                                    salt) VALUES (%s, %s, %s, %s);'''
-        cursor.execute(query, (username, app_username, app, token, salt))
-        conn.commit()
-        return True
-    return False
+    if does_exist:
+        return False
+    
+    # If the record doesn't exist, create the record
+    key, salt = create_fernet_key(bytes(master_password, encoding='utf-8'))
+    fernet_key = Fernet(key)
+    encryption_key = Fernet.generate_key()
+    app_encryption_key = os.getenv("ENCRYPTION_KEY")
+    fernet_token = fernet_key.encrypt(app_password.encode("utf-8"))
+    insert_uname_appname = '''INSERT INTO user_application_records(applicationUsername,
+                              applicationName, accountID) VALUES(%s, %s, %s)'''
+    cursor.execute(insert_uname_appname, (app_username, application_name, account_id))
+    record_id = cursor.lastrowid
+    insert_app_pswd = '''INSERT INTO application_passwords(encryptedPassword, recordID)
+                         VALUES(aes_encrypt(%s, %s), %s)'''
+    cursor.execute(insert_app_pswd, (fernet_token, encryption_key, record_id))
+    insert_pswd_salt = '''INSERT INTO salt_records(salt, recordID)
+                          VALUES(%s, %s)'''
+    cursor.execute(insert_pswd_salt, (salt, record_id))
+    insert_enc_key = '''INSERT INTO encryption_keys(recordID, `key`)
+                        VALUES(%s, aes_encrypt(%s, %s))'''
+    cursor.execute(insert_enc_key, (record_id, encryption_key, app_encryption_key))
+    conn.commit()
+    return True

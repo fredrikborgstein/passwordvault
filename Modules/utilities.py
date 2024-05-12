@@ -1,9 +1,37 @@
 """ A collection of utility functions for the application.
 """
+import os
+import mysql.connector
+from mysql.connector import Error
 import base64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import bcrypt
+from dotenv import load_dotenv
+
+
+def get_account_id(username):
+    try:
+        load_dotenv()
+        conn = mysql.connector.connect(user=os.getenv("USER"),
+                                       password=os.getenv("PASSWORD"),
+                                       host=os.getenv("HOST"),
+                                       database=os.getenv("DATABASE"),
+                                       charset=os.getenv("CHARSET"),
+                                       collation=os.getenv("COLLATION"))
+        cursor = conn.cursor()
+        search_query = '''SELECT accountID FROM master_accounts
+                        WHERE accountUsername = %s'''
+        cursor.execute(search_query, (username,))
+        account_records = cursor.fetchone()
+        account_id = account_records[0]
+        return account_id
+    except Error as e:
+        print(f'An error has occured {e}')
+        return False
+    finally:
+        cursor.close()
+        conn.close()
 
 
 def create_fernet_key(password):

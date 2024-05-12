@@ -18,7 +18,7 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
 cursor = conn.cursor()
 
 
-def new_authentication(username, password):
+def authentication(username, password):
 
     encryption_key = os.getenv("ENCRYPTION_KEY")
     cursor.execute(f'USE {os.getenv("DATABASE")}')
@@ -32,32 +32,6 @@ def new_authentication(username, password):
         cursor.execute(pass_qury, (encryption_key, account_id))
         encrypted_password = cursor.fetchone()
         decrypted_password = encrypted_password[0].decode('utf-8')
-        if bcrypt.checkpw(password.encode('utf-8'), decrypted_password.encode('utf-8')):
-            return True
-        else:
-            return False
-    else:
-        return False
-
-
-def authenticate(username, password):
-    """Authenticates the user
-
-    Args:
-        username (string): username of the user
-        password (string): password of the user
-
-    Returns:
-        Boolean: returns True if the user is authenticated, False if the user is not authenticated
-    """
-    encryption_key = os.getenv("ENCRYPTION_KEY")
-    cursor.execute(f'USE {os.getenv("DATABASE")} ')
-    cursor.execute('''SELECT aes_decrypt(accountPassword, %s)
-                   FROM master_account_records WHERE accountUsername = %s''',
-                   (encryption_key, username))
-    account_information = cursor.fetchone()
-    if account_information:
-        decrypted_password = account_information[0].decode('utf-8')
         if bcrypt.checkpw(password.encode('utf-8'), decrypted_password.encode('utf-8')):
             return True
         else:

@@ -31,7 +31,7 @@ def hash_password(pass_string):
     return hashed_password
 
 
-def new_create_user_func(username, password):
+def create_user_func(username, password):
     hashed_password = hash_password(password)
     bcrypt_hash_utf8 = hashed_password.decode('utf-8')
     encryption_key = os.getenv("ENCRYPTION_KEY")
@@ -42,7 +42,6 @@ def new_create_user_func(username, password):
                     WHERE accountUsername = %s'''
     cursor.execute(user_query, (username,))
     user_ex = cursor.fetchone()
-    print(user_ex)
     if user_ex:
         return False
 
@@ -58,40 +57,3 @@ def new_create_user_func(username, password):
     cursor.execute(add_password, (bcrypt_hash_utf8, encryption_key, account_id))
     conn.commit()
     return True
-
-
-new_create_user_func('fredrik', 'test')
-
-
-def create_user(username, password):
-    """Creates a user in the database
-
-    Args:
-        username (string): The username of the user
-        password (string): The password of the user
-
-    Returns:
-        Boolean: returns True if the user was successfully created, False if the user already exists
-    """
-    hashed_password = hash_password(password)
-    bcrypt_hash_utf8 = hashed_password.decode('utf-8')
-    encryption_key = os.getenv("ENCRYPTION_KEY")
-
-    # Check to see if the user already exists
-    cursor.execute(f'''SELECT accountUsername FROM master_account_records
-                        WHERE accountUsername = "{username}"''')
-    if cursor.fetchone():
-        return False
-    else:
-        cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        cursor.execute('''INSERT INTO master_account_records (accountUsername, accountPassword)
-                        VALUES (%s, aes_encrypt(%s, %s))''',
-                       (username, bcrypt_hash_utf8, encryption_key))
-        cursor.execute(f'''CREATE TABLE IF NOT EXISTS {username}
-                       (id INT AUTO_INCREMENT PRIMARY KEY,
-                       username VARCHAR(255) NOT NULL,
-                       application VARCHAR(255) NOT NULL,
-                       password BLOB(255) NOT NULL,
-                       salt BLOB(255) NOT NULL)''')
-        conn.commit()
-        return True

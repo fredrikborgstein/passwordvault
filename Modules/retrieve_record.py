@@ -8,7 +8,7 @@ import os
 import mysql.connector
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
-from Modules.utilities import derive_fernet_key
+from Modules.utilities import derive_fernet_key, get_account_id
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -21,34 +21,37 @@ cursor = conn.cursor()
 
 
 def retrieve_record(username, master_password, search_query):
-    """Retrieves a record from the database
+    # Retrieve accountID first
+    account_id = get_account_id(username)
+    app_encryption_key = os.getenv("ENCRYPTION_KEY")
 
-    Args:
-        username (string): Username of the user
-        master_password (string): Master password of the user
-        search_query (string): The application name to search for
+    check_app = '''SELECT recordID, applicationName, applicationUsername
+                   FROM user_application_records
+                   WHERE applicationName = %s AND accountID = %s'''
+    cursor.execute(check_app, (search_query, account_id))
+    account_records = cursor.fetchone()
 
-    Returns:
-        Boolean: _description_
-    """
-
-    cursor.execute(f'USE {os.getenv("DATABASE")} ')
-    cursor.execute(f'SELECT * FROM {username} WHERE application = "{search_query}";')
-    record = cursor.fetchall()
-
-    if not record:
+    if not account_records:
+        print('Error')
         return False
 
-    cursor.execute(f'SELECT password FROM {username} WHERE application = "{search_query}";')
-    encrypted_password = cursor.fetchone()[0]
-    cursor.execute(f'SELECT salt FROM {username} WHERE application = "{search_query}";')
-    salt = bytes(cursor.fetchone()[0], encoding="utf-8")
-    key = derive_fernet_key(bytes(master_password, encoding="utf-8"), salt)
-    f = Fernet(key)
-    decrypted_password = f.decrypt(encrypted_password).decode("utf-8")
-    cursor.execute(f'SELECT username FROM {username} WHERE application = "{search_query}";')
-    app_username = cursor.fetchone()[0]
-    cursor.execute(f'SELECT application FROM {username} WHERE application = "{search_query}";')
-    application = cursor.fetchone()[0]
+    app_name = account_records[2]
+    app_uname = account_records[1]
+    record_id = account_records[0]
 
-    return True, app_username, application, decrypted_password
+    search_salt = '''SELECT salt FROM salt_records
+                     WHERE recordID = %s'''
+    cursor.execute(search_salt, (record_id,))
+    salt = bytes(cursor.fetchone()[0], encoding='utf-8')
+    search_enc_key = '''SELECT aes_decrypt(`key`, %s) FROM encryption_keys
+                        WHERE recordID = %s'''
+    cursor.execute(search_enc_key, (app_encryption_key, record_id))
+    key = cursor.fetchone()[0]
+    search_psw = '''SELECT aes_decrypt(encryptedPassword, %s) FROM application_passwords
+                    WHERE recordID = %s'''
+    cursor.execute(search_psw, (key, record_id))
+    encrypted_password = cursor.fetchone()[0].decode('utf-8')
+    fernet_key = derive_fernet_key(bytes(master_password, encoding='utf-8'), salt)
+    f = Fernet(fernet_key)
+    decrypted_password = f.decrypt(encrypted_password).decode('utf-8')
+    return True, app_uname, app_name, decrypted_password
