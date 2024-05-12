@@ -1,11 +1,13 @@
 """This module is used to modify a record in the database
 
 Returns:
-    Boolean: Returns True if the record was successfully modified, False if the record does not exist
+    Boolean: Returns True if the record was 
+                successfully modified, False if the record does not exist
 """
 
 import os
 import mysql.connector
+from mysql.connector import Error
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
 from Modules.utilities import create_fernet_key
@@ -19,7 +21,11 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
                                collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
-def modify_record(username, master_password, record_to_modify, new_application_name, new_application_username, new_application_password):
+def modify_record(username, master_password,
+                  record_to_modify,
+                  new_application_name,
+                  new_application_username,
+                  new_application_password):
     """Modifies a record in the database
 
     Args:
@@ -31,20 +37,26 @@ def modify_record(username, master_password, record_to_modify, new_application_n
         new_application_password (string): The new password for the application being modified
 
     Returns:
-        Boolean: Returns True if the record was successfully modified, False if the record does not exist
+        Boolean: Returns True if the record was 
+        successfully modified, False if the record does not exist
     """
 
     try:
         cursor.execute(f'DELETE FROM {username} WHERE application = "{record_to_modify}";')
-        
+
         key, salt = create_fernet_key(bytes(master_password, encoding="utf-8"))
         f = Fernet(key)
         token = f.encrypt(new_application_password.encode("utf-8"))
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        query = 'INSERT INTO {} (username, application, password, salt) VALUES (%s, %s, %s, %s);'.format(username)
-        cursor.execute(query, (new_application_username, new_application_name, token, salt))
+        query = '''INSERT INTO %s (username, application, password, salt)
+                VALUES (%s, %s, %s, %s);'''
+        cursor.execute(query, (username,
+                               new_application_username,
+                               new_application_name,
+                               token,
+                               salt))
         conn.commit()
         return True, new_application_name, new_application_username, new_application_password
-    except Exception as e:
+    except Error as e:
         print(e)
         return False

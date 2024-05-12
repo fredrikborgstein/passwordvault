@@ -1,7 +1,8 @@
 """ Add a record to the database for the user
 
     Returns:
-        Boolean: Returns True if the record was successfully added, False if the record already exists
+        Boolean: Returns True if the record was 
+        successfully added, False if the record already exists
 """
 import os
 import mysql.connector
@@ -29,10 +30,12 @@ def add_record(master_password, username, app_username, app_password, app):
         app (string): the name of the application being added to the db record
 
     Returns:
-        boolean: returns True if the record was successfully added, False if the record already exists
+        boolean: returns True if the record was 
+        successfully added, False if the record already exists
     """
     cursor.execute(f'USE {os.getenv("DATABASE")} ')
-    cursor.execute('SELECT application FROM {} WHERE application = "{}";'.format(username, app))
+    search_query = 'SELECT application FROM %s WHERE application = %s;'
+    cursor.execute(search_query, (username, app))
     record = cursor.fetchall()
     if not record:
         key, salt = create_fernet_key(bytes(master_password, encoding="utf-8"))
@@ -40,12 +43,11 @@ def add_record(master_password, username, app_username, app_password, app):
         token = f.encrypt(app_password.encode("utf-8"))
 
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        query = 'INSERT INTO {} (username, application, password, salt) VALUES (%s, %s, %s, %s);'.format(username)
-        cursor.execute(query, (app_username, app, token, salt))
+        query = '''INSERT INTO %s (username,
+                                    application,
+                                    password,
+                                    salt) VALUES (%s, %s, %s, %s);'''
+        cursor.execute(query, (username, app_username, app, token, salt))
         conn.commit()
         return True
-    else:
-        return False
-    
-
-
+    return False

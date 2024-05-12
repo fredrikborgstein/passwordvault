@@ -9,6 +9,7 @@ import os
 import customtkinter
 from PIL import Image, ImageTk
 import mysql.connector
+from mysql.connector import Error
 from dotenv import load_dotenv
 import pyperclip
 from cryptography.fernet import Fernet
@@ -39,10 +40,10 @@ img1 = ImageTk.PhotoImage(img1.resize((600, 440)))
 l1 = customtkinter.CTkLabel(master=app, image=img1)
 l1.pack()
 
-versionlabel = customtkinter.CTkLabel(master=app,
+VERSIONLABEL = customtkinter.CTkLabel(master=app,
                                       text=" Version 1.0 ",
                                       font=("Century Gothic", 10))
-versionlabel.place(x=280, y=420)
+VERSIONLABEL.place(x=280, y=420)
 
 menubar = tk.Menu(app)
 file_menu = tk.Menu(menubar, tearoff=0)
@@ -51,19 +52,24 @@ app.config(menu=menubar)
 
 file_menu.add_command(label="About",
                       command=lambda:
-                      tk.messagebox.showinfo("About", "VikingCrypt Protector is a password manager application that allows you to store and retrieve your passwords securely." + versionlabel))
+                      tk.messagebox.showinfo("About",
+                                              """VikingCrypt Protector is a password manager 
+                                              application that allows you to store and 
+                                              retrieve your passwords securely."""
+                                              + VERSIONLABEL))
 file_menu.add_command(label="Help",
                       command=lambda:
-                      tk.messagebox.showinfo("Help", "If you need help, please contact the developer at:)"))
+                      tk.messagebox.showinfo("""Help", "If you need help,
+                                              please contact the developer at:)"""))
 file_menu.add_command(label="Exit",
                       command=app.quit)
 
 
 # Global variables
-current_frame = "loginframe"
-master_password = ""
-account_username = ""
-versionlabel = "  Version 1.0  "
+CURRENT_FRAME = "loginframe"
+MASTER_PASSWORD = ""
+ACCOUNT_USERNAME = ""
+VERSIONLABEL = "  Version 1.0  "
 
 # Functions
 
@@ -71,19 +77,19 @@ def back_to_main_menu():
     """This function hides the current frame and shows the main menu frame
     """
 
-    global current_frame
-    if current_frame == "addrecordframe":
+    global CURRENT_FRAME
+    if CURRENT_FRAME == "addrecordframe":
         addrecordframe.place_forget()
-    elif current_frame == "retrieverecordframe":
+    elif CURRENT_FRAME == "retrieverecordframe":
         retrieverecordframe.place_forget()
-    elif current_frame == "modifyrecordframe":
+    elif CURRENT_FRAME == "modifyrecordframe":
         modifyrecordframe.place_forget()
-    elif current_frame == "listallrecordsframe":
+    elif CURRENT_FRAME == "listallrecordsframe":
         listallrecordsframe.place_forget()
-    elif current_frame == "generatepasswordframe":
+    elif CURRENT_FRAME == "generatepasswordframe":
         generatepasswordframe.place_forget()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
-    current_frame = "mainmenuframe"
+    CURRENT_FRAME = "mainmenuframe"
 
 def login(event):
     """ This function authenticates the user and logs them in
@@ -108,7 +114,8 @@ def login(event):
         is_user_authenticated = authenticate(username, password)
         if not is_user_authenticated:
             tk.messagebox.showerror("Error", "The username or password is incorrect.")
-    except Exception as error:
+            return False
+    except Error as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")
     finally:
         cursor.close()
@@ -118,9 +125,9 @@ def login(event):
     unbind_button_to_login()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-    global master_password, account_username
-    master_password = password
-    account_username = username
+    global MASTER_PASSWORD, ACCOUNT_USERNAME
+    MASTER_PASSWORD = password
+    ACCOUNT_USERNAME = username
     entry1.delete(0, tk.END)
     entry2.delete(0, tk.END)
     entry1.focus()
@@ -144,7 +151,7 @@ def change_to_register():
 def generate_password():
     """ This function generates a random password and displays it in the entry field
     """
-    if current_frame == "generatepasswordframe":
+    if CURRENT_FRAME == "generatepasswordframe":
         length = entry12.get()
     else:
         length = "16"
@@ -155,7 +162,7 @@ def generate_password():
     generated_password.configure(text=password)
     button22.place(x=50, y=250)
 
-    if current_frame == "addrecordframe":
+    if CURRENT_FRAME == "addrecordframe":
         entry7.delete(0, tk.END)
         entry7.insert(0, password)
 
@@ -186,7 +193,7 @@ def register():
         if not is_user_created:
             tk.messagebox.showerror("Error", "The username is already taken.")
 
-    except Exception as error:
+    except Error as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")
     finally:
         cursor.close()
@@ -195,31 +202,31 @@ def register():
     registerframe.place_forget()
     mainmenuframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
-    global master_password, account_username
-    master_password = password
-    account_username = username
+    global MASTER_PASSWORD, ACCOUNT_USERNAME
+    MASTER_PASSWORD = password
+    ACCOUNT_USERNAME = username
 
 def go_to_add_record():
     """ This function hides the main menu frame and shows the add record frame
     """
-    global current_frame
-    current_frame = "addrecordframe"
+    global CURRENT_FRAME
+    CURRENT_FRAME = "addrecordframe"
     mainmenuframe.place_forget()
     addrecordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def go_to_retrieve_record():
     """ This function hides the main menu frame and shows the retrieve record frame
     """
-    global current_frame
-    current_frame = "retrieverecordframe"
+    global CURRENT_FRAME
+    CURRENT_FRAME = "retrieverecordframe"
     mainmenuframe.place_forget()
     retrieverecordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
 def go_to_modify_record():
     """ This function hides the retrieve record frame and shows the modify record frame
     """
-    global current_frame
-    current_frame = "modifyrecordframe"
+    global CURRENT_FRAME
+    CURRENT_FRAME = "modifyrecordframe"
     mainmenuframe.place_forget()
     retrieverecordframe.place_forget()
     modifyrecordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
@@ -227,8 +234,8 @@ def go_to_modify_record():
 def go_to_list_all_records():
     """ This function hides the main menu frame and shows the list all records frame
     """
-    global current_frame
-    current_frame = "listallrecordsframe"
+    global CURRENT_FRAME
+    CURRENT_FRAME = "listallrecordsframe"
     mainmenuframe.place_forget()
     listallrecordsframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
     on_open_listall()
@@ -236,8 +243,8 @@ def go_to_list_all_records():
 def logout():
     """ This function logs the user out and shows the login frame
     """
-    global current_frame
-    current_frame = "loginframe"
+    global CURRENT_FRAME
+    CURRENT_FRAME = "loginframe"
     mainmenuframe.place_forget()
     bind_button_to_login()
     loginframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
@@ -245,8 +252,8 @@ def logout():
 def go_to_generate_password():
     """ This function hides the main menu frame and shows the generate password frame
     """
-    global current_frame
-    current_frame = "generatepasswordframe"
+    global CURRENT_FRAME
+    CURRENT_FRAME = "generatepasswordframe"
     mainmenuframe.place_forget()
     generatepasswordframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
 
@@ -267,8 +274,8 @@ def create_record():
     cursor = conn.cursor()
 
     try:
-        is_record_created = add_record(master_password,
-                                       account_username,
+        is_record_created = add_record(MASTER_PASSWORD,
+                                       ACCOUNT_USERNAME,
                                        username,
                                        password,
                                        application)
@@ -280,7 +287,7 @@ def create_record():
             entry6.delete(0, tk.END)
             entry7.delete(0, tk.END)
             entry5.focus()
-    except Exception as error:
+    except Error as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")
     finally:
         cursor.close()
@@ -301,8 +308,8 @@ def search_record():
     cursor = conn.cursor()
 
     try:
-        is_record_retrieved, app_username, app, app_dec_password = retrieve_record(account_username,
-                                                                                   master_password,
+        is_record_retrieved, app_username, app, app_dec_password = retrieve_record(ACCOUNT_USERNAME,
+                                                                                   MASTER_PASSWORD,
                                                                                    application)
         if not is_record_retrieved:
             tk.messagebox.showerror("Error", "No record found for that application.")
@@ -319,8 +326,8 @@ def search_record():
             button15.place(x=160, y=260)
             button24.place(x=110, y=300)
 
-    except:
-        tk.messagebox.showerror("Error", "An error has occured. Please try again later.")
+    except Error as error:
+        tk.messagebox.showerror("Error", "An error has occured. Please try again later." + error)
     finally:
         cursor.close()
         conn.close()
@@ -328,9 +335,9 @@ def search_record():
 def copy_password():
     """ This function copies the password to the clipboard
     """
-    if current_frame == "retrieverecordframe":
+    if CURRENT_FRAME == "retrieverecordframe":
         pyperclip.copy(label_password_result.cget("text"))
-    elif current_frame == "generatepasswordframe":
+    elif CURRENT_FRAME == "generatepasswordframe":
         pyperclip.copy(generated_password.cget("text"))
     tk.messagebox.showinfo("Success", "The password has been copied to the clipboard.")
     button14.place_forget()
@@ -353,8 +360,8 @@ def modify_searched_record():
     cursor = conn.cursor()
 
     try:
-        is_record_modified, app_username, appl, app_dec_password = modify_record(account_username,
-                                                                                 master_password,
+        is_record_modified, app_username, appl, app_dec_password = modify_record(ACCOUNT_USERNAME,
+                                                                                 MASTER_PASSWORD,
                                                                                  application,
                                                                                  new_app_name,
                                                                                  new_app_username,
@@ -374,7 +381,7 @@ def modify_searched_record():
             label_password_mod.configure(text="Password: ")
             label_password_result_mod.configure(text=app_dec_password)
             button16.place_forget()
-    except Exception as error:
+    except Error as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")
     finally:
         cursor.close()
@@ -421,7 +428,7 @@ def on_open_listall():
                                        collation=os.getenv("COLLATION"))
         cursor = conn.cursor()
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        cursor.execute(f'SELECT * FROM {account_username};')
+        cursor.execute(f'SELECT * FROM {ACCOUNT_USERNAME};')
         record = cursor.fetchall()
 
         for l in record:
@@ -431,12 +438,14 @@ def on_open_listall():
             application_salt = l[4]
 
             salt = bytes(application_salt, encoding="utf-8")
-            key = derive_fernet_key(bytes(master_password, encoding="utf-8"), salt)
+            key = derive_fernet_key(bytes(MASTER_PASSWORD, encoding="utf-8"), salt)
             f = Fernet(key)
             decrypted_password = f.decrypt(application_encrypted_password).decode("utf-8")
-            tree.insert("", "end", values=(application_name, application_username, decrypted_password))
-    except:
-        tk.messagebox.showerror("Error", "An error has occured. Please try again later.")
+            tree.insert("", "end", values=(application_name,
+                                            application_username,
+                                              decrypted_password))
+    except Error as error:
+        tk.messagebox.showerror("Error", "An error has occured. Please try again later." + error)
     finally:
         cursor.close()
         conn.close()
@@ -467,12 +476,12 @@ def delete_record():
         cursor = conn.cursor()
 
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        query = 'DELETE FROM {} WHERE application = %s;'.format(account_username)
-        cursor.execute(query, (search_query,))
+        query = 'DELETE FROM %s WHERE application = %s;'
+        cursor.execute(query, (ACCOUNT_USERNAME, search_query))
         conn.commit()
         tk.messagebox.showinfo("Success", "The record has been deleted successfully.")
         back_to_main_menu()
-    except Exception as error:
+    except Error as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")
     finally:
         cursor.close()

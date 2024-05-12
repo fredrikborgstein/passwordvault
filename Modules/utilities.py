@@ -43,7 +43,7 @@ def derive_fernet_key(password, salt):
         salt=salt,
         iterations=480000,
     )
-    
+
     key = base64.urlsafe_b64encode(kdf.derive(password))
     return key
 
@@ -58,5 +58,3 @@ def derive_salt(db_salt):
     """
     salt = bytes(db_salt, encoding="utf-8")
     return salt
-
-

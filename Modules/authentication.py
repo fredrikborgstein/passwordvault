@@ -1,3 +1,8 @@
+""" This module is used to authenticate the user
+
+    Returns:
+        Boolean: returns True if the user is authenticated, False if the user is not authenticated
+"""
 import os
 import mysql.connector
 import bcrypt
@@ -26,9 +31,9 @@ def authenticate(username, password):
         Boolean: returns True if the user is authenticated, False if the user is not authenticated
     """
     encryption_key = os.getenv("ENCRYPTION_KEY")
-    
     cursor.execute(f'USE {os.getenv("DATABASE")} ')
-    cursor.execute('SELECT aes_decrypt(accountPassword, %s) FROM master_account_records WHERE accountUsername = %s', 
+    cursor.execute('''SELECT aes_decrypt(accountPassword, %s)
+                   FROM master_account_records WHERE accountUsername = %s''',
                    (encryption_key, username))
     account_information = cursor.fetchone()
     if account_information:
@@ -39,4 +44,3 @@ def authenticate(username, password):
             return False
     else:
         return False
-

@@ -1,6 +1,12 @@
-import mysql.connector
+""" This module is used to fetch all records for the user from the database
+
+    Returns:
+        list: Returns a list of all records for the user
+"""
 import os
-from dotenv import load_dotenv, dotenv_values
+import mysql.connector
+from mysql.connector import Error
+from dotenv import load_dotenv
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -12,12 +18,19 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
 cursor = conn.cursor()
 
 def on_initiation():
+    """ This module is used to fetch all records for the user from the database
+
+    Returns:
+        list: Returns a list of all records for the user
+    """
     try:
         cursor.execute(f'USE {os.getenv("DATABASE")} ')
         cursor.execute('SELECT * FROM master_account_records;')
         account_records = cursor.fetchall()
-        return account_records
-    except Exception as error:
+        if account_records:
+            return account_records
+        return None
+    except Error as error:
         print("Error", "An error has occured: ", error)
     finally:
         cursor.close()

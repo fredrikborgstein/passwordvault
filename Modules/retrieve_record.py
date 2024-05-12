@@ -1,7 +1,8 @@
 """ This module retrieves a record from the database
 
 Returns:
-    Boolean: Returns True if the record was successfully retrieved, False if the record does not exist
+    Boolean: Returns True if the record was 
+    successfully retrieved, False if the record does not exist
 """
 import os
 import mysql.connector
@@ -36,7 +37,7 @@ def retrieve_record(username, master_password, search_query):
 
     if not record:
         return False
-   
+
     cursor.execute(f'SELECT password FROM {username} WHERE application = "{search_query}";')
     encrypted_password = cursor.fetchone()[0]
     cursor.execute(f'SELECT salt FROM {username} WHERE application = "{search_query}";')

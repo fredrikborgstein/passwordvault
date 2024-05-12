@@ -2,6 +2,7 @@
 """
 import os
 import mysql.connector
+from mysql.connector import Error
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
 from Modules.utilities import derive_fernet_key
@@ -28,22 +29,20 @@ def list_all_records(username, master_password):
         record = cursor.fetchall()
 
         for l in record:
-            
-           application_name = l[2]
-           application_username = l[1]
-           application_encrypted_password = l[3]
-           application_salt = l[4]
+            application_name = l[2]
+            application_username = l[1]
+            application_encrypted_password = l[3]
+            application_salt = l[4]
+            salt = bytes(application_salt, encoding="utf-8")
+            key = derive_fernet_key(bytes(master_password, encoding="utf-8"), salt)
+            f = Fernet(key)
+            decrypted_password = f.decrypt(application_encrypted_password).decode("utf-8")
+            print("-" * 50)
+            print(f"Application: {application_name}")
+            print(f"Username: {application_username}")
+            print(f"Password: {decrypted_password}")
 
-           salt = bytes(application_salt, encoding="utf-8")
-           key = derive_fernet_key(bytes(master_password, encoding="utf-8"), salt)
-           f = Fernet(key)
-           decrypted_password = f.decrypt(application_encrypted_password).decode("utf-8")
-           print("-" * 50)
-           print(f"Application: {application_name}")
-           print(f"Username: {application_username}")
-           print(f"Password: {decrypted_password}")
-           
-    except Exception as error:
+    except Error as error:
         print("Error", "An error has occured: ", error)
     finally:
         cursor.close()
