@@ -1,7 +1,7 @@
 """ This module retrieves a record from the database
 
 Returns:
-    Boolean: Returns True if the record was 
+    Boolean: Returns True if the record was
     successfully retrieved, False if the record does not exist
 """
 import os
@@ -18,6 +18,7 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
                                charset=os.getenv("CHARSET"),
                                collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
+
 
 def retrieve_record(username, master_password, search_query):
     """Retrieves a record from the database

@@ -17,6 +17,7 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
                                collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
+
 def hash_password(pass_string):
     """Hashes the password
 
@@ -28,6 +29,39 @@ def hash_password(pass_string):
     """
     hashed_password = bcrypt.hashpw(pass_string.encode('utf-8'), bcrypt.gensalt())
     return hashed_password
+
+
+def new_create_user_func(username, password):
+    hashed_password = hash_password(password)
+    bcrypt_hash_utf8 = hashed_password.decode('utf-8')
+    encryption_key = os.getenv("ENCRYPTION_KEY")
+
+    # Check to see if username already exists in DB
+
+    user_query = '''SELECT accountUsername FROM master_accounts
+                    WHERE accountUsername = %s'''
+    cursor.execute(user_query, (username,))
+    user_ex = cursor.fetchone()
+    print(user_ex)
+    if user_ex:
+        return False
+
+    # Create the user in the master_accounts
+    create_the_user = '''INSERT INTO master_accounts(accountUsername)
+                         VALUES(%s)'''
+    cursor.execute(create_the_user, (username,))
+    account_id = cursor.lastrowid
+    print(account_id)
+    # Add the password to the hashed_passwords
+    add_password = '''INSERT INTO password_hashes(hashedPassword, accountID)
+                      VALUES(aes_encrypt(%s, %s), %s)'''
+    cursor.execute(add_password, (bcrypt_hash_utf8, encryption_key, account_id))
+    conn.commit()
+    return True
+
+
+new_create_user_func('fredrik', 'test')
+
 
 def create_user(username, password):
     """Creates a user in the database

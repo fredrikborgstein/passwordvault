@@ -16,6 +16,7 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
                                collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
+
 def list_all_records(username, master_password):
     """Lists all records for the user
 
@@ -28,11 +29,11 @@ def list_all_records(username, master_password):
         cursor.execute(f'SELECT * FROM {username};')
         record = cursor.fetchall()
 
-        for l in record:
-            application_name = l[2]
-            application_username = l[1]
-            application_encrypted_password = l[3]
-            application_salt = l[4]
+        for item in record:
+            application_name = item[2]
+            application_username = item[1]
+            application_encrypted_password = item[3]
+            application_salt = item[4]
             salt = bytes(application_salt, encoding="utf-8")
             key = derive_fernet_key(bytes(master_password, encoding="utf-8"), salt)
             f = Fernet(key)

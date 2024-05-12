@@ -26,7 +26,6 @@ def create_fernet_key(password):
     return key, salt
 
 
-
 def derive_fernet_key(password, salt):
     """Returns a recreation of the key for the Fernet encryption
 
@@ -46,6 +45,7 @@ def derive_fernet_key(password, salt):
 
     key = base64.urlsafe_b64encode(kdf.derive(password))
     return key
+
 
 def derive_salt(db_salt):
     """_summary_

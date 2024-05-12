@@ -1,7 +1,7 @@
 """This module is used to modify a record in the database
 
 Returns:
-    Boolean: Returns True if the record was 
+    Boolean: Returns True if the record was
                 successfully modified, False if the record does not exist
 """
 
@@ -21,6 +21,7 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
                                collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
+
 def modify_record(username, master_password,
                   record_to_modify,
                   new_application_name,
@@ -37,7 +38,7 @@ def modify_record(username, master_password,
         new_application_password (string): The new password for the application being modified
 
     Returns:
-        Boolean: Returns True if the record was 
+        Boolean: Returns True if the record was
         successfully modified, False if the record does not exist
     """
 

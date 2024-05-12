@@ -17,6 +17,7 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
                                collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
+
 def on_initiation():
     """ This module is used to fetch all records for the user from the database
 

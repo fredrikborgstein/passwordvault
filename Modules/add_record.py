@@ -1,7 +1,7 @@
 """ Add a record to the database for the user
 
     Returns:
-        Boolean: Returns True if the record was 
+        Boolean: Returns True if the record was
         successfully added, False if the record already exists
 """
 import os
@@ -19,6 +19,7 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
                                collation=os.getenv("COLLATION"))
 cursor = conn.cursor()
 
+
 def add_record(master_password, username, app_username, app_password, app):
     """Adds a record to the database for the user
 
@@ -30,7 +31,7 @@ def add_record(master_password, username, app_username, app_password, app):
         app (string): the name of the application being added to the db record
 
     Returns:
-        boolean: returns True if the record was 
+        boolean: returns True if the record was
         successfully added, False if the record already exists
     """
     cursor.execute(f'USE {os.getenv("DATABASE")} ')
