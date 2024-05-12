@@ -19,7 +19,7 @@ from Modules.add_record import add_record
 from Modules.retrieve_record import retrieve_record
 from Modules.authentication import authentication
 from Modules.create_user import create_user
-from Modules.utilities import derive_fernet_key
+from Modules.utilities import derive_fernet_key, get_account_id
 from Modules.modify_record import modify_record
 
 
@@ -77,12 +77,15 @@ VERSIONLABEL = "  Version 1.0  "
 def back_to_main_menu():
     """This function hides the current frame and shows the main menu frame
     """
-
+    entry8.delete(0, tk.END)
     global CURRENT_FRAME
     if CURRENT_FRAME == "addrecordframe":
         addrecordframe.place_forget()
     elif CURRENT_FRAME == "retrieverecordframe":
         retrieverecordframe.place_forget()
+        label_username_result.configure(text="")
+        label_password_result.configure(text="")
+        label_app_result.configure(text="")
     elif CURRENT_FRAME == "modifyrecordframe":
         modifyrecordframe.place_forget()
     elif CURRENT_FRAME == "listallrecordsframe":
@@ -330,7 +333,6 @@ def search_record():
         if not is_record_retrieved:
             tk.messagebox.showerror("Error", "No record found for that application.")
         else:
-            entry8.delete(0, tk.END)
             entry8.focus()
             label_app.configure(text="Application: ")
             label_username.configure(text="Username: ")
@@ -446,22 +448,37 @@ def on_open_listall():
                                        charset=os.getenv("CHARSET"),
                                        collation=os.getenv("COLLATION"))
         cursor = conn.cursor()
-        cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        cursor.execute(f'SELECT * FROM {ACCOUNT_USERNAME};')
-        record = cursor.fetchall()
+        account_id = get_account_id(ACCOUNT_USERNAME)
+        search_query = '''SELECT recordID, applicationUsername, applicationName
+                          FROM user_application_records
+                          WHERE accountID = %s'''
+        cursor.execute(search_query, (account_id,))
+        application_list = cursor.fetchall()
+        app_encryption_key = os.getenv("ENCRYPTION_KEY")
 
-        for item in record:
-            application_name = item[2]
-            application_username = item[1]
-            application_encrypted_password = item[3]
-            application_salt = item[4]
+        if not application_list:
+            return False
 
-            salt = bytes(application_salt, encoding="utf-8")
-            key = derive_fernet_key(bytes(MASTER_PASSWORD, encoding="utf-8"), salt)
-            f = Fernet(key)
-            decrypted_password = f.decrypt(application_encrypted_password).decode("utf-8")
+        for record in application_list:
+            record_id = record[0]
+            application_name = record[2]
+            application_uname = record[1]
+            salt_search = 'SELECT salt FROM salt_records WHERE recordID = %s'
+            cursor.execute(salt_search, (record_id,))
+            salt = bytes(cursor.fetchone()[0], encoding='utf-8')
+            enc_key_search = '''SELECT aes_decrypt(`key`, %s) FROM encryption_keys
+                                WHERE recordID = %s'''
+            cursor.execute(enc_key_search, (app_encryption_key, record_id))
+            enc_key = cursor.fetchone()[0]
+            app_psw_search = '''SELECT aes_decrypt(encryptedPassword, %s) FROM application_passwords
+                                WHERE recordID = %s'''
+            cursor.execute(app_psw_search, (enc_key, record_id))
+            encrypted_password = cursor.fetchone()[0].decode('utf-8')
+            fernet_key = derive_fernet_key(bytes(MASTER_PASSWORD, encoding='utf-8'), salt)
+            f = Fernet(fernet_key)
+            decrypted_password = f.decrypt(encrypted_password).decode('utf-8')
             tree.insert("", "end", values=(application_name,
-                                           application_username,
+                                           application_uname,
                                            decrypted_password))
     except Error as error:
         tk.messagebox.showerror("Error", "An error has occured. Please try again later." + error)
@@ -486,6 +503,7 @@ def delete_record():
     """ This function deletes a record from the database
     """
     search_query = entry8.get()
+    account_id = get_account_id(ACCOUNT_USERNAME)
     try:
         load_dotenv()
         conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -495,10 +513,9 @@ def delete_record():
                                        charset=os.getenv("CHARSET"),
                                        collation=os.getenv("COLLATION"))
         cursor = conn.cursor()
-
-        cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        query = 'DELETE FROM %s WHERE application = %s;'
-        cursor.execute(query, (ACCOUNT_USERNAME, search_query))
+        query = '''DELETE FROM user_application_records
+                   WHERE applicationName = %s AND accountID = %s;'''
+        cursor.execute(query, (search_query, account_id))
         conn.commit()
         tk.messagebox.showinfo("Success", "The record has been deleted successfully.")
         back_to_main_menu()
