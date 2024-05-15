@@ -21,6 +21,7 @@ from Modules.authentication import authentication
 from Modules.create_user import create_user
 from Modules.utilities import derive_fernet_key, get_account_id
 from Modules.modify_record import modify_record
+from Modules.password_check import password_check
 
 
 # Creating the main window with settings and appearence
@@ -188,7 +189,21 @@ def register():
     """
     username = entry3.get()
     password = entry4.get()
+    confirm_password = entry13.get()
     is_user_created = False
+    minimum_pswd_length = 12
+
+    if len(password) < minimum_pswd_length:
+        tk.messagebox.showerror('Error', 'Password does not meet minimum length requirements')
+        return False
+    
+    if password_check(password):
+        tk.messagebox.showerror('Error', 'This password is in a list of commonly used passwords, please choose another!')  # noqa: E501
+        return False
+
+    if not password == confirm_password:
+        tk.messagebox.showerror('Error', 'The password doesn\'t match')
+        return False
 
     load_dotenv()
     conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -525,6 +540,10 @@ def delete_record():
         cursor.close()
         conn.close()
 
+
+def show_pswd_help():
+    tk.messagebox.showinfo(master=registerframe, message='Password must be a minimum of 12 characters long')  # noqa: E501
+
 # Creating the login window with widgets
 
 
@@ -565,6 +584,7 @@ button2 = customtkinter.CTkButton(master=loginframe, text="Create Account",
                                   command=change_to_register)
 button2.place(x=160, y=240)
 
+
 # Creating the register user window with widgets
 
 registerframe = customtkinter.CTkFrame(master=l1,
@@ -585,22 +605,32 @@ entry3.place(x=50, y=110)
 entry4 = customtkinter.CTkEntry(master=registerframe,
                                 width=220, placeholder_text="Password",
                                 font=("Century Gothic", 12))
-entry4.configure(show="*")
 entry4.place(x=50, y=165)
+entry13 = customtkinter.CTkEntry(master=registerframe,
+                                 width=220, placeholder_text="Confirm password",
+                                 font=("Century Gothic", 12))
+entry13.place(x=50, y=215)
+
+button25 = customtkinter.CTkButton(master=registerframe,
+                                   text='?',
+                                   width=10,
+                                   corner_radius=20,
+                                   command=show_pswd_help)
+button25.place(x=275, y=165)
 
 button3 = customtkinter.CTkButton(master=registerframe,
                                   text="Register", width=100,
                                   font=("Century Gothic", 12),
                                   corner_radius=6,
                                   command=register)
-button3.place(x=50, y=240)
+button3.place(x=50, y=285)
 button4 = customtkinter.CTkButton(master=registerframe,
                                   text="Back to login",
                                   width=100,
                                   font=("Century Gothic", 12),
                                   corner_radius=6,
                                   command=back_to_login)
-button4.place(x=160, y=240)
+button4.place(x=160, y=285)
 
 # Creating the main menu window with widgets
 

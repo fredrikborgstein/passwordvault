@@ -6,9 +6,11 @@
 """
 import os
 import mysql.connector
+import tkinter as tk
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
 from Modules.utilities import create_fernet_key, get_account_id
+from Modules.password_check import password_check
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -34,6 +36,9 @@ def add_record(master_password, username, app_username, app_password, applicatio
 
     if does_exist:
         return False
+
+    if password_check(app_password):
+        tk.messagebox.showerror('Error', "This password is in a list of commonly used passwords, please choose another!")  # noqa: E501
 
     # If the record doesn't exist, create the record
     key, salt = create_fernet_key(bytes(master_password, encoding='utf-8'))
