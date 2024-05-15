@@ -5,8 +5,8 @@
 """
 import os
 import mysql.connector
-import bcrypt
 from dotenv import load_dotenv
+from argon2 import PasswordHasher
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -19,7 +19,7 @@ cursor = conn.cursor()
 
 
 def authentication(username, password):
-
+    ph = PasswordHasher()
     encryption_key = os.getenv("ENCRYPTION_KEY")
     cursor.execute(f'USE {os.getenv("DATABASE")}')
     id_query = 'SELECT accountID, accountUsername FROM master_accounts WHERE accountUsername = %s'
@@ -32,9 +32,19 @@ def authentication(username, password):
         cursor.execute(pass_qury, (encryption_key, account_id))
         encrypted_password = cursor.fetchone()
         decrypted_password = encrypted_password[0].decode('utf-8')
-        if bcrypt.checkpw(password.encode('utf-8'), decrypted_password.encode('utf-8')):
-            return True
-        else:
-            return False
+        try:
+            if ph.verify(decrypted_password, password):
+                if ph.check_needs_rehash(decrypted_password):
+                    new_hash = ph.hash(password)
+                    query = '''UPDATE password_hashes
+                               SET hashedPassword = aes_encrypt(%s, %s)
+                               WHERE accountID = %s'''
+                    cursor.execute(query, (new_hash, encryption_key, account_id))
+                print('success')
+                return True
+        except Exception as e:
+            return False, e
+        finally:
+            return
     else:
         return False

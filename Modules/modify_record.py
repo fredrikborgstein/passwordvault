@@ -7,9 +7,11 @@ Returns:
 
 import os
 import mysql.connector
+import tkinter as tk
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
 from Modules.utilities import get_account_id, create_fernet_key
+from Modules.password_check import password_check
 
 
 load_dotenv()
@@ -48,6 +50,11 @@ def modify_record(username,
     if cursor.rowcount == 0:
         print(f"No record with application name '{record_to_modify}' found for user '{username}'.")
         return False
+
+    if password_check(new_app_psw):
+        tk.messagebox.showerror('Error', 'This password is in a list of commonly used passwords, please choose another!')  # noqa: E501
+        return False
+
     key, salt = create_fernet_key(bytes(master_password, encoding='utf-8'))
     fernet_key = Fernet(key)
     encryption_key = Fernet.generate_key()

@@ -196,7 +196,7 @@ def register():
     if len(password) < minimum_pswd_length:
         tk.messagebox.showerror('Error', 'Password does not meet minimum length requirements')
         return False
-    
+
     if password_check(password):
         tk.messagebox.showerror('Error', 'This password is in a list of commonly used passwords, please choose another!')  # noqa: E501
         return False
