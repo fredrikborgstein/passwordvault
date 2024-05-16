@@ -1,4 +1,4 @@
-"""This module is the main module of the application. It contains the main window
+""" This module is the main module of the application. It contains the main window
     and all the functions that are used to interact with the database and the user interface.
 """
 
@@ -72,6 +72,7 @@ CURRENT_FRAME = "loginframe"
 MASTER_PASSWORD = ""
 ACCOUNT_USERNAME = ""
 VERSIONLABEL = "  Version 1.0  "
+ATTEMPTED_LOGINS = 0
 
 # Functions
 
@@ -107,7 +108,7 @@ def login(event):
     username = entry1.get()
     password = entry2.get()
     is_user_authenticated = False
-
+    global ATTEMPTED_LOGINS
     load_dotenv()
     conn = mysql.connector.connect(user=os.getenv("USER"),
                                    password=os.getenv("PASSWORD"),
@@ -116,12 +117,20 @@ def login(event):
                                    charset=os.getenv("CHARSET"),
                                    collation=os.getenv("COLLATION"))
     cursor = conn.cursor()
-
     try:
-        is_user_authenticated = authentication(username, password)
-        if not is_user_authenticated:
-            tk.messagebox.showerror("Error", "The username or password is incorrect.")
-            return False
+        while not is_user_authenticated:
+            is_user_authenticated = authentication(username, password)
+            
+            if not is_user_authenticated:
+                ATTEMPTED_LOGINS += 1
+                remaining_attempts = 3 - ATTEMPTED_LOGINS
+                if ATTEMPTED_LOGINS < 3:
+                    tk.messagebox.showerror("Error", f"The username or password is incorrect. The application will exit in {remaining_attempts} more attempt(s)!")  # noqa: E501
+                
+                if ATTEMPTED_LOGINS == 3:
+                    tk.messagebox.showerror("Error", "The username or password is incorrect. The application will now exit!")  # noqa: E501
+                    exit_application()
+                return False
     except Error as error:
         tk.messagebox.showerror("Error", f"An error has occured: {error}")
     finally:
@@ -552,11 +561,15 @@ def show_pswd_help():
 
 def welcome_first_use():
     first_time_use = check_if_first_time_use()
-    if first_time_use:
+    if not first_time_use:
         print('Function seems good')
         return
     loginframe.place_forget()
     welcomeframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+
+def exit_application():
+    app.destroy()
 
 
 # Creating the welcome screen
