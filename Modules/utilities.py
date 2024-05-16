@@ -7,7 +7,7 @@ import base64
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import bcrypt
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values, set_key
 
 
 def get_account_id(username):
@@ -86,3 +86,14 @@ def derive_salt(db_salt):
     """
     salt = bytes(db_salt, encoding="utf-8")
     return salt
+
+
+def set_encryption_key():
+    new_encryption_key = bcrypt.gensalt(26).decode('utf-8')
+    env_vars = dotenv_values('.env')
+    env_vars['ENCRYPTION_KEY'] = new_encryption_key
+
+    for key, value in env_vars.items():
+        set_key('.env', key, value)
+
+    return True

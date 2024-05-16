@@ -38,7 +38,7 @@ def add_record(master_password, username, app_username, app_password, applicatio
         return False
 
     if password_check(app_password):
-        tk.messagebox.showerror('Error', "This password is in a list of commonly used passwords, please choose another!")  # noqa: E501
+        tk.messagebox.showinfo('Error', "This password is in a list of commonly used passwords, please choose another!")  # noqa: E501
 
     # If the record doesn't exist, create the record
     key, salt = create_fernet_key(bytes(master_password, encoding='utf-8'))

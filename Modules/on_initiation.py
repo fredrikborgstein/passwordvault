@@ -1,12 +1,16 @@
-""" This module is used to fetch all records for the user from the database
+""" This module is run when the application is opened, to check wether the
+    application has been run before
+    and if not, it creates the initial information such as encryption key.
 
     Returns:
         list: Returns a list of all records for the user
 """
 import os
 import mysql.connector
+import tkinter as tk
 from mysql.connector import Error
 from dotenv import load_dotenv
+from Modules.utilities import set_encryption_key
 
 load_dotenv()
 conn = mysql.connector.connect(user=os.getenv("USER"),
@@ -18,21 +22,16 @@ conn = mysql.connector.connect(user=os.getenv("USER"),
 cursor = conn.cursor()
 
 
-def on_initiation():
-    """ This module is used to fetch all records for the user from the database
-
-    Returns:
-        list: Returns a list of all records for the user
-    """
+def check_if_first_time_use():
     try:
-        cursor.execute(f'USE {os.getenv("DATABASE")} ')
-        cursor.execute('SELECT * FROM master_account_records;')
+        cursor.execute('SELECT * FROM master_accounts')
         account_records = cursor.fetchall()
+
         if account_records:
-            return account_records
-        return None
-    except Error as error:
-        print("Error", "An error has occured: ", error)
-    finally:
-        cursor.close()
-        conn.close()
+            return False
+    except Error as e:
+        tk.messagebox.showerror('Error',
+                                f'There was an error connecting to the Database {e}')
+
+    set_encryption_key()
+    return True

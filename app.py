@@ -22,6 +22,7 @@ from Modules.create_user import create_user
 from Modules.utilities import derive_fernet_key, get_account_id
 from Modules.modify_record import modify_record
 from Modules.password_check import password_check
+from Modules.on_initiation import check_if_first_time_use
 
 
 # Creating the main window with settings and appearence
@@ -155,7 +156,11 @@ def change_to_register():
     """ This function hides the login frame and shows the register frame
     """
     loginframe.place_forget()
+    welcomeframe.place_forget()
     registerframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+    first_time_user = check_if_first_time_use()
+    if not first_time_user:
+        button4.place_forget()
 
 
 def generate_password():
@@ -543,6 +548,44 @@ def delete_record():
 
 def show_pswd_help():
     tk.messagebox.showinfo(master=registerframe, message='Password must be a minimum of 12 characters long')  # noqa: E501
+
+
+def welcome_first_use():
+    first_time_use = check_if_first_time_use()
+    if first_time_use:
+        print('Function seems good')
+        return
+    loginframe.place_forget()
+    welcomeframe.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+
+# Creating the welcome screen
+
+welcomeframe = customtkinter.CTkFrame(master=l1,
+                                      width=320,
+                                      height=360,
+                                      corner_radius=15, )
+
+welcomelabel = customtkinter.CTkLabel(master=welcomeframe,
+                                      text="Welcome to VikingCrypt Guard",
+                                      font=("Century Gothic", 20))
+welcomelabel.place(x=10, y=45)
+
+need_to_registerlabel = customtkinter.CTkLabel(master=welcomeframe,
+                                               text="Since this is the first time the application")
+need_to_registerlabel.place(x=40, y=90)
+need_to_registerlabel2 = customtkinter.CTkLabel(master=welcomeframe,
+                                                text="is used, you need to register for a user account.")  # noqa: E501
+need_to_registerlabel2.place(x=30, y=115)
+need_to_registerlabel3 = customtkinter.CTkLabel(master=welcomeframe,
+                                                text="Please use the button below to set up your account.")  # noqa: E501
+need_to_registerlabel3.place(x=10, y=140)
+
+welcome_button = customtkinter.CTkButton(master=welcomeframe, text="Create Account",
+                                         width=100, font=("Century Gothic", 12),
+                                         corner_radius=6,
+                                         command=change_to_register)
+welcome_button.place(x=110, y=180)
 
 # Creating the login window with widgets
 
@@ -941,4 +984,5 @@ generated_password = customtkinter.CTkLabel(master=generatepasswordframe,
 generated_password.place(x=50, y=200)
 
 # Running the application loop
+welcome_first_use()
 app.mainloop()
