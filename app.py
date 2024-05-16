@@ -556,7 +556,7 @@ def delete_record():
 
 
 def show_pswd_help():
-    tk.messagebox.showinfo(master=registerframe, message='Password must be a minimum of 12 characters long')  # noqa: E501
+    tk.messagebox.showinfo(master=registerframe, message='Password must be a minimum of 12 characters long. It should not be made of "normal" words you can find in the dictionary, and try to avoid long sequences of the same characters (ie. $$$$ or 1111). Try making it as strong as possible!')  # noqa: E501
 
 
 def welcome_first_use():
@@ -570,6 +570,10 @@ def welcome_first_use():
 
 def exit_application():
     app.destroy()
+
+
+def show_password():
+    entry2.configure(show="")
 
 
 # Creating the welcome screen
@@ -639,6 +643,16 @@ button2 = customtkinter.CTkButton(master=loginframe, text="Create Account",
                                   corner_radius=6,
                                   command=change_to_register)
 button2.place(x=160, y=240)
+
+showpassword_button = customtkinter.CTkButton(master=loginframe,
+                                              text="Show Password",
+                                              width=40,
+                                              border_width=0,
+                                              fg_color="gray12",
+                                              hover_color="gray11",
+                                              font=("Century Gothic", 10),
+                                              command=show_password)
+showpassword_button.place(x=50, y=195)
 
 
 # Creating the register user window with widgets
